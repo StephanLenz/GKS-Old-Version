@@ -61,7 +61,7 @@ public:
 
     void computeCons();
 
-    double getLocalTimestep(Parameters param);
+    double getLocalTimestep(double nu);
 
 	float2 getCenter();
 

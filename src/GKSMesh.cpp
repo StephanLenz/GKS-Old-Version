@@ -48,10 +48,10 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 
 		for (int j = -1; j < nx + 1; j++)   // X-Direction
 		{
-            if (j == -1)         currentBC = BoundaryConditionList[0];
-            else if (j == nx)    currentBC = BoundaryConditionList[2];
-            else if (i == -1)    currentBC = BoundaryConditionList[1];
+            if (i == -1)         currentBC = BoundaryConditionList[1];
             else if (i == ny)    currentBC = BoundaryConditionList[3];
+            else if (j == -1)    currentBC = BoundaryConditionList[0];
+            else if (j == nx)    currentBC = BoundaryConditionList[2];
             else                 currentBC = NULL;
 
 			//                      cell centerX         cell centerY
@@ -152,7 +152,7 @@ void GKSMesh::computeGlobalTimestep()
     {
         if (!((*i)->isGhostCell()))
         {
-            this->dt = min( (*i)->getLocalTimestep(this->param), this->dt );
+            this->dt = min( (*i)->getLocalTimestep(this->param.nu), this->dt );
         }
     }
     this->dt *= this->param.CFL;

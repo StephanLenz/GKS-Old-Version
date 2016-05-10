@@ -33,21 +33,8 @@ struct Parameters
     double tauMassMomentum;
     double tauHeat;
 
-	double rhoInf;
-	double pInf;
-	double uInf;
-
-	double Re;
-	double Ma;
-	double Pr;
-	double Ra;
-
 	double G0;
 	double beta;
-
-	double Tbot;
-	double Ttop;
-	double TInf;
 	double TAve;
 
 	double CFL;

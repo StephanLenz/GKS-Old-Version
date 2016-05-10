@@ -146,14 +146,14 @@ void Cell::computeCons()
     this->cons[2] = this->prim[0] * this->prim[2];
 }
 
-double Cell::getLocalTimestep(Parameters param)
+double Cell::getLocalTimestep(double nu)
 {
     double velocitySquare = this->getPrim().U*this->getPrim().U
                           + this->getPrim().V*this->getPrim().V;
     double localTimestep =  min(dx, dy) 
                          / ( velocitySquare
                            + 1.0/sqrt(3.0) 
-                           + 2.0*param.nu/min(dx, dy) );
+                           + 2.0*nu/min(dx, dy) );
     return localTimestep;
 }
 
