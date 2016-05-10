@@ -81,6 +81,8 @@ public:
 
 	string toString();
 
+    string valuesToString();
+
 	string writeNodes();
 };
 

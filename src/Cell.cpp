@@ -63,11 +63,11 @@ void Cell::updateMassMomentum(double dt, double G0, double beta, double Tave)
 
 void Cell::updateTemperature()
 {
-    this->prim[4] = ( this->InterfaceList[0]->getHeatFlux()
-                    + this->InterfaceList[1]->getHeatFlux()
-                    - this->InterfaceList[2]->getHeatFlux()
-                    - this->InterfaceList[3]->getHeatFlux()
-                    ) / (this->dx*this->dy);
+    this->prim[3] += ( this->InterfaceList[0]->getHeatFlux()
+                     + this->InterfaceList[1]->getHeatFlux()
+                     - this->InterfaceList[2]->getHeatFlux()
+                     - this->InterfaceList[3]->getHeatFlux()
+                     ) / (this->dx*this->dy);
 }
 
 void Cell::storeOldValues()
@@ -85,7 +85,6 @@ void Cell::applyBoundaryCondition()
     Cell* neighborCell = this->findNeighborInDomain();
 
     // if no neighbor was found
-    // TODO: Corner cell, no BC implemented right now.....
     if (neighborCell == NULL)
     {
         // search any inerface and take the neigbor 
@@ -107,7 +106,7 @@ void Cell::applyBoundaryCondition()
 
         if (type == 0)
         {
-            this->prim[i] = 2*value - neighborCell->prim[i];
+            this->prim[i] = 2.0*value - neighborCell->prim[i];
         }
         else if (type == 1)
         {
@@ -243,6 +242,14 @@ string Cell::toString()
 	tmp << this->centerY;
 	tmp << " )";
 	return tmp.str();
+}
+
+string Cell::valuesToString()
+{
+    ostringstream tmp;
+    tmp << this->toString() << "\n";
+    tmp << this->prim[0] << " " << this->prim[1] << " " << this->prim[2] << " " << this->prim[3] << "\n";
+    return tmp.str();
 }
 
 string Cell::writeNodes()

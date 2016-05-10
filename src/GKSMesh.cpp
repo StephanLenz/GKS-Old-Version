@@ -168,8 +168,12 @@ void GKSMesh::timeStep()
     this->computeGlobalTimestep();
     if (this->param.verbose) cout << "    dt = " << this->dt << endl;
 
-    if (this->param.verbose) cout << "  Apply Bpundary Conditions ..." << endl;
+    // ========================================================================
+
+    if (this->param.verbose) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
+
+    // ========================================================================
 
     if (this->param.verbose) cout << "  Compute Mass- and Momentum Fluxes ..." << endl;
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
@@ -185,22 +189,28 @@ void GKSMesh::timeStep()
             (*i)->updateMassMomentum(this->dt, this->param.G0, this->param.beta, this->param.TAve);
     }
 
+    // ========================================================================
+
     if (this->param.verbose) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
+
+    // ========================================================================
 
     if (this->param.verbose) cout << "  Compute Heat Flux ..." << endl;
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
-        if (!(*i)->isGhostInterface())
+        if ( ! (*i)->isGhostInterface() )
             (*i)->computeHeatFlux(this->dt, this->param.tauHeat);
     }
 
     if (this->param.verbose) cout << "  Update Temperature in Cells" << endl;
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
-        if ( !(*i)->isGhostCell() )
+        if ( ! (*i)->isGhostCell() )
             (*i)->updateTemperature();
     }
+
+    // ========================================================================
 
     if (this->param.verbose) cout << "  Apply Boundary Conditions ..." << endl;
     this->applyBoundaryCondition();
@@ -224,6 +234,8 @@ void GKSMesh::iterate()
             filename << "out/result_" << this->iter << ".vtk";
             writeVTKFile(filename.str(), true, false);
         }
+        //cout << this->toString();
+        //cout << this->cellValuesToString();
     }
 }
 
@@ -234,10 +246,22 @@ string GKSMesh::toString()
 
 	for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
 	{
+        if( ! (*i)->isGhostInterface() )
 		tmp << (*i)->toString();
 	}
 
 	return tmp.str();
+}
+
+string GKSMesh::cellValuesToString()
+{
+    ostringstream tmp;
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        if( ! (*i)->isGhostCell()  )
+            tmp << (*i)->valuesToString() << "\n";
+    }
+    return tmp.str();
 }
 
 void GKSMesh::writeVTKFile(string filename, bool data, bool BC)

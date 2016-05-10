@@ -151,8 +151,8 @@ void Interface::computeHeatFlux(double dt, double tau)
     tangentialB = tangentialGradTemperature;
     timeA = -(normalA*prim[1] + tangentialB*prim[2]);
 
-    this->HeatFlux = ( timeCoefficients[0] * prim[1] * prim[4]
-                     + timeCoefficients[1] * ( normalA *( prim[1] * prim[1] + 1.0/3.0 )
+    this->HeatFlux = ( timeCoefficients[0] * prim[1] * prim[3]
+                     + timeCoefficients[1] * ( normalA * ( prim[1] * prim[1] + 1.0/3.0 )
                                              + tangentialB * prim[1] * prim[2] )
                      + timeCoefficients[2] * timeA * prim[1]
                      ) * dy;
@@ -194,6 +194,11 @@ string Interface::toString()
 	tmp << "\n";
 	tmp << this->posCell->toString();
 	tmp << "\n";
+    tmp << this->MassMomentumFlux[0] << " " << this->MassMomentumFlux[1] << " " << this->MassMomentumFlux[2];
+    tmp << "\n";
+    tmp << this->HeatFlux;
+    tmp << "\n";
+    tmp << "\n";
 	return tmp.str();
 }
 

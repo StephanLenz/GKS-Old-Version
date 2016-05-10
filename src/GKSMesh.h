@@ -53,6 +53,7 @@ public:
     void iterate();
 
 	string toString();
+    string cellValuesToString();
 
 	void writeVTKFile(string filename, bool data = true, bool BC = false);
 

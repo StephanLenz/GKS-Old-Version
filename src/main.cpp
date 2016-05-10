@@ -15,8 +15,8 @@ int main(int argc, char* argv[])
     // ========================================================================
     Parameters param;
 	
-	param.numberOfIterations = 1000;
-    param.outputInterval = 10;
+	param.numberOfIterations = 1000000;
+    param.outputInterval = 10000;
 	param.CFL = 0.5;
 
 	param.Pr = 1.0;
@@ -55,33 +55,33 @@ int main(int argc, char* argv[])
     //    | 0     2 |
     //    |    1    |
     //    -----------
-    /*
+    ///*
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
     mesh->addBoundaryCondition(1, 0, 0, 0, 0.0, 0.0, 0.0, param.Tbot);
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, 0.0, 0.0, 0.0);
     mesh->addBoundaryCondition(1, 0, 0, 0, 0.0, 0.0, 0.0, param.Ttop);
-    */
-    ///*
+    //*/
+    /*
     mesh->addBoundaryCondition(1, 0, 1, 1, 0.0, 1.0, 0.0, 10.0); // left
     mesh->addBoundaryCondition(1, 0, 1, 1, 0.0, 0.0, 0.0, 10.0); // bottom
     mesh->addBoundaryCondition(1, 0, 1, 1, 0.0, 1.0, 0.0, 10.0); // right
     mesh->addBoundaryCondition(1, 0, 1, 1, 0.0, 0.0, 0.0, 10.0); // top
-    //*/
+    */
 
     // Generate Mesh
-    //mesh->generateRectMesh(W, H, 80, 40);
-    mesh->generateRectMesh(H, W, 40, 80);
+    mesh->generateRectMesh(W, H, 80, 40);
+    //mesh->generateRectMesh(H, W, 40, 80);
 
     //cout << mesh->toString();
 
     // Initialize Values
 	double T[2] = { param.Tbot, param.Ttop };
-	//mesh->initMeshLinearTemperature(param.rhoInf, 0.0, 0.0, T);
-    mesh->initMeshConstant(param.rhoInf, 1.0, 0.0, 10.0);
+	mesh->initMeshLinearTemperature(param.rhoInf, 0.0, 0.0, T);
+    //mesh->initMeshConstant(param.rhoInf, 1.0, 0.0, 10.0);
     
     mesh->applyBoundaryCondition();
 
     mesh->iterate();
 
-	char a; cin >> a;
+	//char a; cin >> a;
 }
