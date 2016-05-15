@@ -33,7 +33,7 @@ Cell::~Cell()
 	delete [] InterfaceList;
 }
 
-void Cell::updateMassMomentum(double dt, double G0, double beta, double Tave)
+void Cell::update(double dt, double G0, double beta, double Tave)
 {
     this->storeOldValues();
 
@@ -59,15 +59,6 @@ void Cell::updateMassMomentum(double dt, double G0, double beta, double Tave)
                    + this->getPrimOld().rho*beta*G0*(this->getPrimOld().T - Tave)*dt;
 
     this->computePrim();
-}
-
-void Cell::updateTemperature()
-{
-    this->prim[3] += ( this->InterfaceList[0]->getHeatFlux()
-                     + this->InterfaceList[1]->getHeatFlux()
-                     - this->InterfaceList[2]->getHeatFlux()
-                     - this->InterfaceList[3]->getHeatFlux()
-                     ) / (this->dx*this->dy);
 }
 
 void Cell::storeOldValues()
@@ -137,6 +128,9 @@ void Cell::computePrim()
     this->prim[0] = this->cons[0];
     this->prim[1] = this->cons[1] / this->cons[0];
     this->prim[2] = this->cons[2] / this->cons[0];
+    // eq. in GKS Book page 79 at the bottom
+    this->prim[3] = (this->fluidParam.K + 2.0)*this->cons[0]
+                  / ( 4.0 * ( this->cons[3] - 0.5*(this->cons[1]* this->cons[1] + this->cons[2] * this->cons[2])/this->cons[0] ) );
 }
 
 void Cell::computeCons()
@@ -144,6 +138,9 @@ void Cell::computeCons()
     this->cons[0] = this->prim[0];
     this->cons[1] = this->prim[0] * this->prim[1]; 
     this->cons[2] = this->prim[0] * this->prim[2];
+    // inverse of eq. in GKS Book page 79 at the bottom
+    this->cons[3] = this->prim[0] * (this->fluidParam.K + 2.0) / (4.0*this->prim[3])
+                  + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
 }
 
 double Cell::getLocalTimestep(double nu)
@@ -171,7 +168,7 @@ PrimaryVariable Cell::getPrim()
     tmp.rho = this->prim[0];
     tmp.U   = this->prim[1];
     tmp.V   = this->prim[2];
-    tmp.T   = this->prim[3];
+    tmp.L   = this->prim[3];
     return tmp;
 }
 
@@ -181,7 +178,7 @@ PrimaryVariable Cell::getPrimOld()
     tmp.rho = this->primOld[0];
     tmp.U   = this->primOld[1];
     tmp.V   = this->primOld[2];
-    tmp.T   = this->primOld[3];
+    tmp.L   = this->primOld[3];
     return tmp;
 }
 
@@ -191,6 +188,7 @@ ConservedVariable Cell::getCons()
     tmp.rho  = this->cons[0];
     tmp.rhoU = this->cons[1];
     tmp.rhoV = this->cons[2];
+    tmp.rhoE = this->cons[3];
     return tmp;
 }
 
@@ -200,6 +198,7 @@ ConservedVariable Cell::getConsOld()
     tmp.rho  = this->consOld[0];
     tmp.rhoU = this->consOld[1];
     tmp.rhoV = this->consOld[2];
+    tmp.rhoE = this->consOld[3];
     return tmp;
 }
 

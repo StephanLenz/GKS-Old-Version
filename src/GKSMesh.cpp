@@ -175,39 +175,18 @@ void GKSMesh::timeStep()
 
     // ========================================================================
 
-    if (this->param.verbose) cout << "  Compute Mass- and Momentum Fluxes ..." << endl;
+    if (this->param.verbose) cout << "  Compute Fluxes ..." << endl;
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         if( !(*i)->isGhostInterface() )
-            (*i)->computeMassMomentumFlux(this->dt, this->param.tauMassMomentum);
+            (*i)->computeFlux(this->dt, this->param.tauMassMomentum);
     }
 
-    if (this->param.verbose) cout << "  Update Mass and Momentum in Cells ..." << endl;
+    if (this->param.verbose) cout << "  Update Cells ..." << endl;
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         if( !(*i)->isGhostCell() )
-            (*i)->updateMassMomentum(this->dt, this->param.G0, this->param.beta, this->param.TAve);
-    }
-
-    // ========================================================================
-
-    if (this->param.verbose) cout << "  Apply Boundary Conditions ..." << endl;
-    this->applyBoundaryCondition();
-
-    // ========================================================================
-
-    if (this->param.verbose) cout << "  Compute Heat Flux ..." << endl;
-    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
-    {
-        if ( ! (*i)->isGhostInterface() )
-            (*i)->computeHeatFlux(this->dt, this->param.tauHeat);
-    }
-
-    if (this->param.verbose) cout << "  Update Temperature in Cells" << endl;
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
-    {
-        if ( ! (*i)->isGhostCell() )
-            (*i)->updateTemperature();
+            (*i)->update(this->dt, this->param.G0, this->param.beta, this->param.TAve);
     }
 
     // ========================================================================

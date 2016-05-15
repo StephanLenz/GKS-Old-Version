@@ -21,6 +21,8 @@ private:
 	double dx;
 	double dy;
 
+    FluidParameter fluidParam;
+
 	// links to interfaces
 	//    -----------
 	//    |    3    |
@@ -48,8 +50,7 @@ public:
 
 	void addInterface(Interface* newInterface, int direction);
 
-	void updateMassMomentum(double dt, double G0, double beta, double Tave);
-    void updateTemperature();
+	void update(double dt, double G0, double beta, double Tave);
 
     void storeOldValues();
 

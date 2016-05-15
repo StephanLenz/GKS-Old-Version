@@ -41,21 +41,22 @@ Interface::~Interface()
 {
 }
 
-void Interface::computeMassMomentumFlux(double dt, double tau)
+void Interface::computeFlux(double dt, double tau)
 {
     const int NUMBER_OF_MOMENTS = 5;
 
     double prim[4];
-    double normalGradCons[3];
-    double tangentialGradCons[3];
-    double timeGrad[3];
+    double normalGradCons[4];
+    double tangentialGradCons[4];
+    double timeGrad[4];
 
-    double normalA[3];
-    double tangentialB[3];
-    double timeA[3];
+    double a[4];
+    double b[4];
+    double A[4];
 
     double MomentU[NUMBER_OF_MOMENTS];
     double MomentV[NUMBER_OF_MOMENTS];
+    double MomentXi[NUMBER_OF_MOMENTS];
 
     double MomentUV_1_0[3];
 
@@ -69,8 +70,13 @@ void Interface::computeMassMomentumFlux(double dt, double tau)
     double dy = this->posCell->getDx().x * normal.y
               + this->posCell->getDx().y * normal.x;
 
-    // time integration Coefficients in Eq. 10
-    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
+    // time integration Coefficients
+    double timeCoefficients[6] = {  dt + tau * exp(-dt/tau) ,
+                                  - dt * tau * ( 1.0 + exp(-dt/tau),
+                                    0.5 * dt*dt - dt*tau - exp(-dt / tau),
+                                  - tau * exp(-dt / tau),
+                                  - tau * (1 +2.0*tau) * exp(-dt / tau),
+                                    tau * tau * exp(-dt / tau) };
 
     this->interpolatePrim(prim);
     this->differentiateCons(normalGradCons, tangentialGradCons, prim);
@@ -86,76 +92,24 @@ void Interface::computeMassMomentumFlux(double dt, double tau)
     // spacial micro slopes a = a1 + a2 u + a3 v
     //                      b = b1 + b2 u + b3 v
 
-    this->computeMicroSlope(prim, normalGradCons,     normalA    );
-    this->computeMicroSlope(prim, tangentialGradCons, tangentialB);
+    this->computeMicroSlope(prim, normalGradCons,     a);
+    this->computeMicroSlope(prim, tangentialGradCons, b);
 
     // temporal micro slopes A = A1 + A2 u + A3 v
 
-    this->computeMomentU(prim, MomentU, MomentV, NUMBER_OF_MOMENTS);
-    this->computeMomentAU(normalA,     MomentU, MomentV, 1, 0, normalMomentAU_1_0    );
-    this->computeMomentAU(tangentialB, MomentU, MomentV, 0, 1, tangentialMomentAU_0_1);
+    this->computeMoments(prim, MomentU, MomentV, MomentXi, NUMBER_OF_MOMENTS);
 
-    for (int i = 0; i < 3; i++)
-        timeGrad[i] = - (normalMomentAU_1_0[i] + tangentialMomentAU_0_1[i]);
+    this->computeTimeDerivative(prim, MomentU, MomentV, MomentXi, a, b, timeGrad);
 
-    this->computeMicroSlope(prim, timeGrad, timeA);
+    this->computeMicroSlope(prim, timeGrad, A);
 
     // compute mass and momentum fluxes
 
-    this->computeMomentUV(MomentU, MomentV, 1, 0, MomentUV_1_0);
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients);
 
-    this->computeMomentAU(normalA,     MomentU, MomentV, 2, 0, normalMomentAU_2_0    );
-    this->computeMomentAU(tangentialB, MomentU, MomentV, 1, 1, tangentialMomentAU_1_1);
-
-    this->computeMomentAU(timeA, MomentU, MomentV, 1, 0, timeMomentAU_1_0);
-
-    for(int i = 0; i < 3; i++)
-        this->MassMomentumFlux[i] = ( timeCoefficients[0] * MomentUV_1_0[i]
-                                    + timeCoefficients[1] * ( normalMomentAU_2_0[i] + tangentialMomentAU_1_1[i] )
-                                    + timeCoefficients[2] * timeMomentAU_1_0[i]
-                                    ) * prim[0] * dy;
-
-        // in case of horizontal interface (G interface), swap velocity fluxes
+    // in case of horizontal interface (G interface), swap velocity fluxes
     if (this->axis == 1)
-        this->rotate(this->MassMomentumFlux);
-
-}
-
-void Interface::computeHeatFlux(double dt, double tau)
-{
-    double prim[4];
-    double normalGradTemperature;
-    double tangentialGradTemperature;
-
-    double normalA;
-    double tangentialB;
-    double timeA;
-
-    // compute the length of the interface
-    double dy = this->posCell->getDx().x * normal.y
-              + this->posCell->getDx().y * normal.x;
-
-    // Coefficients in Eq. 10
-    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
-
-    this->interpolatePrim(prim);
-    this->differentiateTemperature(normalGradTemperature, tangentialGradTemperature);
-
-    // in case of horizontal interface, swap velocity directions
-    if (this->axis == 1)
-    {
-        this->rotate(prim);
-    }
-
-    normalA = normalGradTemperature;
-    tangentialB = tangentialGradTemperature;
-    timeA = -(normalA*prim[1] + tangentialB*prim[2]);
-
-    this->HeatFlux = ( timeCoefficients[0] * prim[1] * prim[3]
-                     + timeCoefficients[1] * ( normalA * ( prim[1] * prim[1] + 1.0/3.0 )
-                                             + tangentialB * prim[1] * prim[2] )
-                     + timeCoefficients[2] * timeA * prim[1]
-                     ) * dy;
+        this->rotate(this->Flux);
 
 }
 
@@ -167,18 +121,14 @@ Cell * Interface::getNeigborCell(Cell * askingCell)
         return posCell;
 }
 
-ConservedVariable Interface::getMassMomentumFlux()
+ConservedVariable Interface::getFlux()
 {
     ConservedVariable tmp;
-    tmp.rho  = this->MassMomentumFlux[0];
-    tmp.rhoU = this->MassMomentumFlux[1];
-    tmp.rhoV = this->MassMomentumFlux[2];
+    tmp.rho  = this->Flux[0];
+    tmp.rhoU = this->Flux[1];
+    tmp.rhoV = this->Flux[2];
+    tmp.rhoE = this->Flux[3];
     return tmp;
-}
-
-double Interface::getHeatFlux()
-{
-    return this->HeatFlux;
 }
 
 bool Interface::isGhostInterface()
@@ -194,9 +144,7 @@ string Interface::toString()
 	tmp << "\n";
 	tmp << this->posCell->toString();
 	tmp << "\n";
-    tmp << this->MassMomentumFlux[0] << " " << this->MassMomentumFlux[1] << " " << this->MassMomentumFlux[2];
-    tmp << "\n";
-    tmp << this->HeatFlux;
+    tmp << this->Flux[0] << " " << this->Flux[1] << " " << this->Flux[2] << " " << this->Flux[3];
     tmp << "\n";
     tmp << "\n";
 	return tmp.str();
@@ -211,8 +159,8 @@ void Interface::interpolatePrim(double * prim)
                   + this->posCell->getPrim().U   );
     prim[2] = 0.5*( this->negCell->getPrim().V
                   + this->posCell->getPrim().V   );
-    prim[3] = 0.5*( this->negCell->getPrim().T
-                  + this->posCell->getPrim().T   );
+    prim[3] = 0.5*( this->negCell->getPrim().L
+                  + this->posCell->getPrim().L   );
 }
 
 void Interface::differentiateCons(double* normalGradCons, double* tangentialGradCons, double* prim)
@@ -226,13 +174,16 @@ void Interface::differentiateCons(double* normalGradCons, double* tangentialGrad
                 + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
 
     normalGradCons[0] = ( this->posCell->getCons().rho
-                        - this->negCell->getCons().rho  ) / dn / prim[0];
+                        - this->negCell->getCons().rho  ) / dn;
 
     normalGradCons[1] = ( this->posCell->getCons().rhoU
-                        - this->negCell->getCons().rhoU ) / dn / prim[0];
+                        - this->negCell->getCons().rhoU ) / dn;
 
     normalGradCons[2] = ( this->posCell->getCons().rhoV
-                        - this->negCell->getCons().rhoV ) / dn / prim[0];
+                        - this->negCell->getCons().rhoV ) / dn;
+
+    normalGradCons[3] = ( this->posCell->getCons().rhoE
+                        - this->negCell->getCons().rhoE ) / dn;
 
     // ========================================================================
     // tangential direction
@@ -288,7 +239,7 @@ void Interface::differentiateCons(double* normalGradCons, double* tangentialGrad
                               + this->posCell->getCons().rho 
                               + this->negCell->getCons().rho
                               ) * 0.25
-                            ) / dt / prim[0];
+                            ) / dt;
 
     tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU
                               + this->negCell->getNeighborCell(posIdx)->getCons().rhoU
@@ -300,7 +251,7 @@ void Interface::differentiateCons(double* normalGradCons, double* tangentialGrad
                               + this->posCell->getCons().rhoU 
                               + this->negCell->getCons().rhoU 
                               ) * 0.25
-                            ) / dt / prim[0];
+                            ) / dt;
 
     tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV
                               + this->negCell->getNeighborCell(posIdx)->getCons().rhoV
@@ -312,57 +263,77 @@ void Interface::differentiateCons(double* normalGradCons, double* tangentialGrad
                               + this->posCell->getCons().rhoV 
                               + this->negCell->getCons().rhoV 
                               ) * 0.25
-                            ) / dt / prim[0];
+                            ) / dt;
+
+    tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE
+                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoE
+                              + this->posCell->getCons().rhoE 
+                              + this->negCell->getCons().rhoE 
+                              ) * 0.25
+                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE
+                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoE 
+                              + this->posCell->getCons().rhoE 
+                              + this->negCell->getCons().rhoE 
+                              ) * 0.25
+                            ) / dt;
 
 }
 
-void Interface::differentiateTemperature(double& normalGradTemperatur, double& tangentialGradTemperatur )
+void Interface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
+                                      double* a, double* b, double * timeGrad)
 {
-    // ========================================================================
-    // normal direction
-    // ========================================================================
 
-    // compute the distance between 
-    double dn = ( ( this->posCell->getDx().x + this->negCell->getDx().x ) * normal.x
-                + ( this->posCell->getDx().y + this->negCell->getDx().y ) * normal.y ) * 0.5;
+    timeGrad[0] = a[0] * MomentU[1] * MomentV[0]
+                + a[1] * MomentU[2] * MomentV[0]
+                + a[2] * MomentU[1] * MomentV[1]
+                + a[3] * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
+                + b[0] * MomentU[0] * MomentV[1]
+                + b[1] * MomentU[1] * MomentV[1]
+                + b[2] * MomentU[0] * MomentV[2]
+                + b[3] * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] ) ;
 
-    normalGradTemperatur = ( this->posCell->getPrim().T
-                           - this->negCell->getPrim().T ) / dn;
+    timeGrad[1] = a[0] * MomentU[2] * MomentV[0]
+                + a[1] * MomentU[3] * MomentV[0]
+                + a[2] * MomentU[2] * MomentV[1]
+                + a[3] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
+                + b[0] * MomentU[1] * MomentV[1]
+                + b[1] * MomentU[2] * MomentV[1]
+                + b[2] * MomentU[1] * MomentV[2]
+                + b[3] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] );
 
-    // ========================================================================
-    // tangential direction
-    // ========================================================================
+    timeGrad[2] = a[0] * MomentU[1] * MomentV[1]
+                + a[1] * MomentU[2] * MomentV[1]
+                + a[2] * MomentU[1] * MomentV[2]
+                + a[3] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                + b[0] * MomentU[0] * MomentV[2]
+                + b[1] * MomentU[1] * MomentV[2]
+                + b[2] * MomentU[0] * MomentV[3]
+                + b[3] * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] );
 
-    // get the indieces of the perpendicular interfaces
-    int posIdx;
-    int negIdx;
-    if (this->axis == 0)
-    {
-        posIdx = 3;
-        negIdx = 1;
-    }
-    else
-    {
-        posIdx = 2;
-        negIdx = 0;
-    }
+    timeGrad[3] = a[0] * 0.50 * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
+                + a[1] * 0.50 * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
+                + a[2] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                + a[4] * 0.25 * ( MomentU[5] + MomentU[1]* ( MomentV[4] + MomentXi[4] )
+                                + 2.0 * MomentU[3] * MomentV[2]
+                                + 2.0 * MomentU[3] * MomentXi[2]
+                                + 2.0 * MomentU[1] * MomentV[2] * MomentXi[2] )
+                + b[0] * 0.50 * ( MomentU[2] * MomentV[1] + MomentU[0] * MomentV[3] + MomentU[0] * MomentV[1] * MomentXi[2] )
+                + b[1] * 0.50 * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                + b[2] * 0.50 * ( MomentU[2] * MomentV[2] + MomentU[0] * MomentV[4] + MomentU[0] * MomentV[2] * MomentXi[2] )
+                + b[4] * 0.25 * ( MomentV[5] + MomentV[1] * ( MomentU[4] + MomentXi[4] )
+                                + 2.0 * MomentU[2] * MomentV[3]
+                                + 2.0 * MomentU[2] * MomentV[1] * MomentXi[2]
+                                + 2.0 * MomentV[3] * MomentXi[2] );
 
-    // compute the tangential distance (length of the interface)
-    double dt = this->posCell->getDx().x * normal.y
-              + this->posCell->getDx().y * normal.x;
+    timeGrad[0] /= -prim[0];
+    timeGrad[1] /= -prim[1];
+    timeGrad[2] /= -prim[2];
+    timeGrad[3] /= -prim[3];
+}
 
-    tangentialGradTemperatur = ( ( this->posCell->getNeighborCell(posIdx)->getPrim().T
-                                 + this->negCell->getNeighborCell(posIdx)->getPrim().T
-                                 + this->posCell->getPrim().T 
-                                 + this->negCell->getPrim().T 
-                                 ) * 0.25
-                               - ( this->posCell->getNeighborCell(negIdx)->getPrim().T
-                                 + this->negCell->getNeighborCell(negIdx)->getPrim().T 
-                                 + this->posCell->getPrim().T 
-                                 + this->negCell->getPrim().T
-                                 ) * 0.25
-                               ) / dn;
-
+void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients)
+{
+    this->Flux[0] = 
 }
 
 void Interface::rotate(double * vector)
@@ -374,14 +345,29 @@ void Interface::rotate(double * vector)
 
 void Interface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
 {
-    // compute micro slopes of primitive variables from macro slopes of conservatice variables
+    double A, B, C, D, U_2_V_2;
+
+    U_2_V_2 = prim[1] * prim[1] + prim[2] * prim[2];
+
+    A = 2.0*macroSlope[3] - ( U_2_V_2  + (this->fluidParam.K + 2.0) / (2.0*prim[3]) * macroSlope[0] );
+
     // the product rule of derivations is used here!
-    microSlope[2] = 3.0 * ( macroSlope[2] - prim[2] * macroSlope[0] );
-    microSlope[1] = 3.0 * ( macroSlope[1] - prim[1] * macroSlope[0] );
-    microSlope[0] = macroSlope[0] - prim[1] * microSlope[1] - prim[2] * microSlope[2];
+    B = macroSlope[1] - prim[1] * macroSlope[0];
+    C = macroSlope[2] - prim[2] * macroSlope[0];
+
+    // compute micro slopes of primitive variables from macro slopes of conservatice variables
+    microSlope[3] = 2.0 * (4.0 * prim[3]*prim[3])/(this->fluidParam.K + 2.0)
+                        * ( A - 2.0*prim[1]*B - 2.0*prim[2]*C );
+
+    microSlope[2] = 2.0 * prim[3] * C - prim[2] * microSlope[3];
+
+    microSlope[1] = 2.0 * prim[3] * B - prim[1] * microSlope[3];
+
+    microSlope[0] = macroSlope[0] - prim[1]*microSlope[1] - prim[2]*microSlope[2] 
+                                  - 0.5 * ( U_2_V_2 + (this->fluidParam.K + 2.0) / (2.0*prim[3]) )* microSlope[3];
 }
 
-void Interface::computeMomentU(double * prim, double * MomentU, double * MomentV, int numberMoments)
+void Interface::computeMoments(double * prim, double * MomentU, double* MomentXi, double * MomentV, int numberMoments)
 {
     //==================== U Moments ==========================================
     MomentU[0] = 1.0;
@@ -394,6 +380,14 @@ void Interface::computeMomentU(double * prim, double * MomentU, double * MomentV
     MomentV[1] = prim[2];
     for (int i = 2; i < numberMoments; i++)
         MomentV[i] = prim[2] * MomentV[i - 1] + 0.5*(i - 1)*MomentV[i - 2] * 2.0 / 3.0;
+
+    //==================== Xi Moments =========================================
+    MomentXi[0] = 1.0;
+    MomentXi[1] = 0.0;
+    MomentXi[2] = this->fluidParam.K / (2.0 * prim[3]);
+    MomentXi[3] = 0.0;
+    MomentXi[4] = ( 2.0*this->fluidParam.K + 1.0*this->fluidParam.K*this->fluidParam.K ) / (4.0 * prim[3] * prim[3]);
+    MomentXi[5] = 0.0;
 }
 
 void Interface::computeMomentUV(double * MomentU, double * MomentV, int alpha, int beta, double * MomentUV)
@@ -401,9 +395,11 @@ void Interface::computeMomentUV(double * MomentU, double * MomentV, int alpha, i
     // compute <u^alpha v^beta>         for rho
     //         <u^alpha+1 v^beta>       for rhoU
     //         <u^alpha v^beta + 1>     for rhoV
-    MomentUV[0] = MomentU[alpha] * MomentV[beta];
+    MomentUV[0] = MomentU[alpha]   * MomentV[beta];
     MomentUV[1] = MomentU[alpha+1] * MomentV[beta];
-    MomentUV[2] = MomentU[alpha] * MomentV[beta+1];
+    MomentUV[2] = MomentU[alpha]   * MomentV[beta+1];
+    MomentUV[3] = MomentU[alpha+2] * MomentV[beta]
+                + MomentU[alpha]   * MomentV[beta+2]
 }
 
 void Interface::computeMomentAU(double * a, double * MomentU, double * MomentV, int alpha, int beta, double* MomentAU)
@@ -417,6 +413,9 @@ void Interface::computeMomentAU(double * a, double * MomentU, double * MomentV, 
     this->computeMomentUV(MomentU, MomentV, alpha  , beta+1, MomentUV_2);
 
     for (int i = 0; i < 3; i++)
-        MomentAU[i] = a[0] * MomentUV_0[i] + a[1] * MomentUV_1[i] + a[2] * MomentUV_2[i];
+        MomentAU[i] = a[0] * MomentUV_0[i] 
+                    + a[1] * MomentUV_1[i] 
+                    + a[2] * MomentUV_2[i]
+                    + a[3] * ;
 }
 

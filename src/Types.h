@@ -7,7 +7,7 @@ struct PrimaryVariable
 	double rho;
 	double U;
 	double V;
-	double T;
+	double L;   // Lambda = m/(2kT) = 1/(2RT)
 };
 
 struct ConservedVariable
@@ -15,12 +15,20 @@ struct ConservedVariable
 	double rho;
 	double rhoU;
 	double rhoV;
+    double rhoE;
 };
 
 struct float2
 {
 	double x;
 	double y;
+};
+
+struct FluidParameter
+{
+    int K;   
+    double nu;  // viscosity
+    double R;   // spez gasconstant
 };
 
 struct Parameters

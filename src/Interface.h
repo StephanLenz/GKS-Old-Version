@@ -17,19 +17,18 @@ private:
     float2 normal;
     int axis;
 
-    double MassMomentumFlux[3];
-    double HeatFlux;
+    FluidParameter fluidParam;
+
+    double Flux[4];
 public:
 	Interface();
 	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal);
 	~Interface();
 
-	void computeMassMomentumFlux(double dt, double tau);
-    void computeHeatFlux(double dt, double tau);
+	void computeFlux(double dt, double tau);
 
     Cell* getNeigborCell(Cell* askingCell);
-    ConservedVariable getMassMomentumFlux();
-    double getHeatFlux();
+    ConservedVariable getFlux();
 
     bool isGhostInterface();
 
@@ -39,12 +38,16 @@ private:
 
     void interpolatePrim(double* prim);
     void differentiateCons(double* normalGradCons, double* tangentialGradCons, double* prim);
-    void differentiateTemperature(double& normalGradTemperatur, double& tangentialGradTemperatur);
+
+    void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
+                               double* a, double* b, double * timeGrad);
+
+    void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, double* a, double* b, double* A, double* timeCoefficients);
 
     void rotate(double* vector);
 
     void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
-    void computeMomentU(double* prim, double* MomentU, double* MomentV, int numberMoments);
+    void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);
     void computeMomentUV(double* MomentU, double* MomentV, int alpha, int beta, double* MomentUV);
     void computeMomentAU(double* a, double* MomentU, double* MomentV, int alpha, int beta, double* MomentAU);
 };
