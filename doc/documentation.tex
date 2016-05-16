@@ -1,0 +1,186 @@
+\documentclass[
+	pdftex,             % Ausgabe des Latex-Dokuments als PDF
+	12pt,				% Schriftgroesse 12pt
+	a4paper,		   	% Seiten Layout
+	german,				% Sprache, global
+	oneside,			% Einseitiger Druck
+]{article}
+
+% Für Times new Roman ähnliche Schriftart
+%\usepackage{mathptmx}
+\usepackage{times}
+
+% Seitenränder
+\usepackage{geometry}
+\geometry{a4paper, top=50mm, left=25mm, right=25mm, bottom=25mm,
+headsep=15mm}
+
+\usepackage[T1]{fontenc}
+\usepackage[utf8]{inputenc}
+\usepackage[ngerman]{babel}
+
+% Erweiterte Mathematikbibliotheken
+\usepackage{amsmath}
+\usepackage{amssymb}
+
+% Zum einbinden von Grafiken  
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{wrapfig}
+
+% Für Caption ohne "Abbildung :"
+\usepackage{caption}
+
+% Benutzerdefinierte Kopf- und Fußzeile
+\usepackage{scrpage2}
+\pagestyle{scrheadings}
+\setheadsepline{1pt} % Linie unter dem Header
+\ihead{Gas-Kinetic-Scheme \\ Documentation}
+\ohead{Stephan Lenz \\ IRMB -- TU Braunschweig}
+
+% Einr�cken nach Absatz verhinder
+\setlength{\parindent}{0pt}
+
+\usepackage{blindtext}
+
+\newcommand{\mom}[1]{\langle #1 \rangle}
+
+\begin{document}
+
+\section{Flux Computation}
+
+The main part of the Gas-Kinetic-Scheme Implementation, is the Flux Computation.
+
+The constants $a_i$, $b_i$ and $A_i$ in the Taylor expansion of the Maxwellian distribution function are computed as:
+
+\begin{eqnarray}
+A &=& 2 \frac{\partial (\rho E)}{\partial x} 
+  - ( U^2 + V^2 + \frac{K+2}{2\lambda} \frac{\partial\rho}{\partial x} )
+\\
+B &=& \frac{\partial (\rho U)}{\partial x} - U\frac{\partial \rho}{\partial x}
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\left( = \rho \frac{\partial U}{\partial x} \right)
+\\
+C &=& \frac{\partial (\rho V)}{\partial x} - V\frac{\partial \rho}{\partial x}
+	~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~\left( = \rho \frac{\partial V}{\partial x} \right)
+\end{eqnarray}
+
+\begin{eqnarray}
+a_4 &=& \frac{4 \lambda^2}{K+2} ( A - 2 U B - 2 V C )
+\\
+a_3 &=& 2 \lambda C - V a_4
+\\
+a_2 &=& 2 \lambda B - U a_4
+\\
+a_1 &=& \frac{\partial \rho}{\partial x} - U a-2 - V a_3 - \frac{1}{2} \left( U^2 + V^2 + \frac{K+2}{2\lambda} \right)
+\end{eqnarray}
+
+This computation is here only shown for the normal variation constant $a_i$. For the tangential and time variation the tangential and time derivatives of the macroscopic variables need to be used in the above formulas. The spacial derivatives are computed from finite differences between then cell values. For the time derivative a more complex computation is needed. The time derivatives can be expressed as:
+
+\begin{equation}
+\begin{pmatrix}
+	\frac{\partial \rho    }{\partial t} \\
+	\frac{\partial (\rho V)}{\partial t} \\
+	\frac{\partial (\rho U)}{\partial t} \\
+	\frac{\partial (\rho E)}{\partial t}
+\end{pmatrix}
+ =
+ -\frac{1}{\rho}
+\int \limits^{\infty}_{-\infty}
+\begin{pmatrix}
+	1 \\
+	u \\
+	v \\
+	\frac{1}{2} ( u^2 + v^2 + \xi^2 )
+\end{pmatrix}
+(a u + b v) ~g~
+du dv d\xi
+\end{equation}
+
+\begin{equation}
+a = a_1 + a_2~u + a_3~v + a_4~\frac{1}{2}~(u^2 + v^2 + \xi^2)
+\end{equation}
+
+The integral over all velocities can be computed analytically, since it is just a linear combination of different moments of the Maxwellian distribution function.
+
+\begin{equation}
+\mom{u} = \int \limits^{\infty}_{-\infty} u ~g~ du dv d\xi
+~~~\textnormal{,} ~~~
+\mom{u^2} = \int \limits^{\infty}_{-\infty} u^2 ~g~ du dv d\xi
+~~~\textnormal{, ...}
+\end{equation}
+
+\begin{equation}
+\mom{u^\alpha v^\beta}
+= 
+\int \limits^{\infty}_{-\infty} u^\alpha v^\beta ~g~ du dv d\xi
+=
+\int \limits^{\infty}_{-\infty} u^\alpha ~g~ du dv d\xi ~ 
+\int \limits^{\infty}_{-\infty} v^\beta  ~g~ du dv d\xi
+=
+\mom{u^\alpha}\mom{v^\beta}
+\end{equation}
+
+With these relations the integral can be computed as:
+
+\begin{eqnarray*}
+\frac{\partial \rho}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+ &~&a_1 \mom{u} + a_2 \mom{u^2} + a_3 \mom{u}\mom{v}
++   a_4 \frac{1}{2} \Big( \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} \Big)
+\\
++&~&b_1 \mom{v} + b_2 \mom{u}\mom{v} + b_3 \mom{v^2} + 
++   b_4  \frac{1}{2} \Big( \mom{u^2}\mom{v} + \mom{v^3} + \mom{v}\mom{\xi^2} \Big)
+\Bigg)
+\end{eqnarray*}
+\begin{eqnarray*}
+\frac{\partial (\rho U)}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+&~&a_1 \mom{u^2} + a_2 \mom{u^3} + a_3 \mom{u^2}\mom{v}
++  a_4 \frac{1}{2} \Big( \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} \Big)
+\\
+&~&b_1 \mom{u}\mom{v} + b_2 \mom{u^2}\mom{v} + b_3 \mom{u}\mom{v^2}
++  b_4 \frac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
+\Bigg)
+\end{eqnarray*}
+\begin{eqnarray*}
+\frac{\partial (\rho V)}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+&~&a_1 \mom{u}\mom{v} + a_2 \mom{u^2}\mom{v} + a_3 \mom{u}\mom{v^2}
++  a_4 \frac{1}{2} \Big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} \Big)
+\\
+&~&b_1 \mom{u}\mom{v} + b_2 \mom{u^2}\mom{v} + b_3 \mom{u}\mom{v^2}
++  b_4 \frac{1}{2} \Big( \mom{u^2}\mom{v^2} + \mom{v^4} + \mom{v^2}\mom{\xi^2} \Big)
+\Bigg)
+\end{eqnarray*}
+\begin{eqnarray*}
+\frac{\partial (\rho E)}{\partial t}
+=
+-\frac{1}{\rho}
+\Bigg(
+ &a_1& \frac{1}{2}~ \Big(~ \mom{u^3} + \mom{u}\mom{v^2} + \mom{u}\mom{\xi^2} ~\Big) \\
++&a_2& \frac{1}{2}~ \Big(~ \mom{u^4} + \mom{u^2}\mom{v^2} + \mom{u^2}\mom{\xi^2} ~\Big) \\
++&a_3& \frac{1}{2}~ \Big(~ \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom{\xi^2} ~\Big) \\
++&a_4& \frac{1}{2}~ \Big(~ \frac{1}{2}~
+					\big(~ \mom{u^5} + \mom{u}\mom{v^4} + \mom{u}\mom{\xi^4} \big)
+						 + \mom{u^3}\mom{v^2} + \mom{u^3}\mom{\xi^2} + \mom{u}\mom{v}\mom{\xi^2}
+					~\Big)
+\\
++&b_1& \frac{1}{2}~ \Big(~ \mom{u^2}\mom{v} + \mom{v^3} + \mom{v}\mom{\xi^2} ~\Big) \\
++&b_2& \frac{1}{2}~ \Big(~ \mom{u^3}\mom{v} + \mom{u}\mom{v^2} + \mom{u}\mom{v}\mom{\xi^2} ~\Big) \\
++&b_3& \frac{1}{2}~ \Big(~ \mom{u^2}\mom{v^2} + \mom{v^4} + \mom{v^2}\mom{\xi^2} ~\Big) \\
++&b_4& \frac{1}{2}~ \Big(~ \frac{1}{2}~
+					\big(~ \mom{v^5} + \mom{u^4}\mom{v} + \mom{v}\mom{\xi^4} \big)
+						 + \mom{u^2}\mom{v^3} + \mom{u^2}\mom{v}\mom{\xi^2} + \mom{v^3}\mom{\xi^2}
+					~\Big)
+\Bigg)
+\end{eqnarray*}
+
+The Flux over the interface is computed from the distribution function on the interface. 
+
+\end{document}
