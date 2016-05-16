@@ -42,7 +42,8 @@ private:
     void computeTimeDerivative(double* prim, double* MomentU, double* MomentV, double* MomentXi,
                                double* a, double* b, double * timeGrad);
 
-    void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, double* a, double* b, double* A, double* timeCoefficients);
+    void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
+                      double* a, double* b, double* A, double* timeCoefficients, double dy);
 
     void rotate(double* vector);
 
