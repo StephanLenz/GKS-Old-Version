@@ -358,7 +358,7 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
     Flux_2[2] = timeCoefficients[1] * ( a[0] * MomentU[2] * MomentV[1]
                                       + a[1] * MomentU[3] * MomentV[1]
                                       + a[2] * MomentU[2] * MomentV[2]
-                                      + a[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[2]*MomentXi[2] )
+                                      + a[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
                                       + b[0] * MomentU[1] * MomentV[2]
                                       + b[1] * MomentU[2] * MomentV[2]
                                       + b[2] * MomentU[1] * MomentV[3]
