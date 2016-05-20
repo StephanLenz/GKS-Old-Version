@@ -21,6 +21,7 @@ private:
     vector<BoundaryCondition*> BoundaryConditionList;
 
     Parameters param;
+    FluidParameter fluidParam;
 
 	double lengthX;		
 	double lengthY;
@@ -31,7 +32,7 @@ private:
 public:
 	GKSMesh();
 
-    GKSMesh(Parameters param);
+    GKSMesh(Parameters param, FluidParameter fluidParam);
 
 	~GKSMesh();
 

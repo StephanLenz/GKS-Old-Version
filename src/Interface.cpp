@@ -7,7 +7,7 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal)
+Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam)
 {
 	this->negCell = negCell;
 	this->posCell = posCell;
@@ -35,6 +35,8 @@ Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal)
 
     this->normal = normal;
     this->axis = axis;
+
+    this->fluidParam = fluidParam;
 }
 
 Interface::~Interface()
@@ -43,7 +45,7 @@ Interface::~Interface()
 
 void Interface::computeFlux(double dt, double tau)
 {
-    const int NUMBER_OF_MOMENTS = 5;
+    const int NUMBER_OF_MOMENTS = 7;
 
     double prim[4];
     double normalGradCons[4];
@@ -57,14 +59,6 @@ void Interface::computeFlux(double dt, double tau)
     double MomentU[NUMBER_OF_MOMENTS];
     double MomentV[NUMBER_OF_MOMENTS];
     double MomentXi[NUMBER_OF_MOMENTS];
-
-    double MomentUV_1_0[3];
-
-    double normalMomentAU_1_0[3];
-    double normalMomentAU_2_0[3];
-    double tangentialMomentAU_0_1[3];
-    double tangentialMomentAU_1_1[3];
-    double timeMomentAU_1_0[3];
 
     // compute the length of the interface
     double dy = this->posCell->getDx().x * normal.y
@@ -100,7 +94,7 @@ void Interface::computeFlux(double dt, double tau)
 
     // compute mass and momentum fluxes
 
-    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients);
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy);
 
     // in case of horizontal interface (G interface), swap velocity fluxes
     if (this->axis == 1)
@@ -321,9 +315,9 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
                                 + 2.0 * MomentV[3] * MomentXi[2] );
 
     timeGrad[0] /= -prim[0];
-    timeGrad[1] /= -prim[1];
-    timeGrad[2] /= -prim[2];
-    timeGrad[3] /= -prim[3];
+    timeGrad[1] /= -prim[0];
+    timeGrad[2] /= -prim[0];
+    timeGrad[3] /= -prim[0];
 }
 
 void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy)
@@ -458,6 +452,7 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentXi
 
 void Interface::computeMomentUV(double * MomentU, double * MomentV, int alpha, int beta, double * MomentUV)
 {
+    /*
     // compute <u^alpha v^beta>         for rho
     //         <u^alpha+1 v^beta>       for rhoU
     //         <u^alpha v^beta + 1>     for rhoV
@@ -465,11 +460,13 @@ void Interface::computeMomentUV(double * MomentU, double * MomentV, int alpha, i
     MomentUV[1] = MomentU[alpha+1] * MomentV[beta];
     MomentUV[2] = MomentU[alpha]   * MomentV[beta+1];
     MomentUV[3] = MomentU[alpha+2] * MomentV[beta]
-                + MomentU[alpha]   * MomentV[beta+2]
+                + MomentU[alpha]   * MomentV[beta+2];
+    */
 }
 
 void Interface::computeMomentAU(double * a, double * MomentU, double * MomentV, int alpha, int beta, double* MomentAU)
 {
+    /*
     double MomentUV_0[3];
     double MomentUV_1[3];
     double MomentUV_2[3];
@@ -483,5 +480,6 @@ void Interface::computeMomentAU(double * a, double * MomentU, double * MomentV, 
                     + a[1] * MomentUV_1[i] 
                     + a[2] * MomentUV_2[i]
                     + a[3] * ;
+    */
 }
 

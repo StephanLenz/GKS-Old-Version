@@ -38,6 +38,8 @@ headsep=15mm}
 
 \newcommand{\mom}[1]{\langle #1 \rangle}
 \newcommand{\uu}[1]{\underline{#1}}
+\newcommand{\uuu}[1]{\underline{\underline{#1}}}
+\newcommand{\vv}[1]{\vec{#1}}
 
 % =====================================================
 
@@ -505,15 +507,55 @@ A_4 ~\tfrac{1}{2} \big( \mom{u^3}\mom{v} + \mom{u}\mom{v^3} + \mom{u}\mom{v}\mom
 \right)
 \end{math}
 
+\clearpage
+
+\subsection*{Update of conservative variables and time Integration}
+
+The Gas-Kinetic Scheme is a Finite Volume method, which uses the Gas-Kinetic to compute the interface fluxes. The Computation of the Fluxes was shown in the previous sections. The values of the conservative variables in the cells are then updated with these Fluxes:
+
+\begin{equation}
+\uu{W}_{i,j}^{n+1}
+=
+\uu{W}_{i,j}^{n}
++ \dfrac{1}{\Delta V}
+\sum \limits_l
+\int \limits_{t^n}^{t^{+1}}
+\uu{\vv{F}}_l \cdot \vv{\Delta}S_l
+dt
+\hfill\textnormal{with}\hspace{0.5cm}
+\uu{W} = \Big[ \rho, \rho U, \rho V, \rho E \Big]^T
+\end{equation}
+
+For the implementation the time integration can be solved explicitly. Moreover the Flux density tensor $\uu{\vv{F}}_l$ is formulated in a local coordinate system and has only the form of a Vector of the Fluxes in Interface normal direction. The current implementation supports only structured rectangular grids. Therefore only vertical and horizontal interfaces occur. The projection of the Flux density tensor on the interface normal then simplifies to a swap of the momentum fluxes for the horizontal interfaces and a projection of the interface normal (positive coordinate direction) onto the outward facing normal of the cell face. the latter one results only in a positive (right and top) or negative (left and bottom) sign $s$.
+
+\begin{equation}
+\uu{W}_{i,j}^{n+1}
+=
+\uu{W}_{i,j}^{n}
++ \dfrac{1}{\Delta V}
+\sum \limits_l
+s ~
+\uuu{R}
+\left[
+\uu{F}^1 t - \tau t \uu{F}^2 + (\tfrac{1}{2} t^2 - \tau t) \uu{F}^3
+\right]_0^{\Delta t}
+\end{equation}
 
 
+\begin{equation}
+\uu{W}_{i,j}^{n+1}
+=
+\uu{W}_{i,j}^{n}
++ \dfrac{1}{\Delta V}
+\sum \limits_l
+s ~
+\uuu{R}
+\left(
+\uu{F}^1 \Delta t - \tau \Delta t \uu{F}^2 + (\tfrac{1}{2} \Delta t^2 - \tau \Delta t) \uu{F}^3
+\right)
+\end{equation}
 
-
-
-
-
-
-
+The swap of the momentum components in shown by the Rotation Matrix $\uuu{R}$ which just rotates the second and third component.
 
 
 

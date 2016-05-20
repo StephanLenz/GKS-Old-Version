@@ -13,7 +13,7 @@ Cell::Cell()
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
 }
 
-Cell::Cell(double centerX, double centerY, double dx, double dy, BoundaryCondition* BC)
+Cell::Cell(double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam)
 {
 	this->InterfaceList = new Interface*[4];
     memset(InterfaceList, NULL, 4 * sizeof(Interface*));
@@ -25,6 +25,8 @@ Cell::Cell(double centerX, double centerY, double dx, double dy, BoundaryConditi
 	this->dy = dy;
 
     this->BoundaryContitionPointer = BC;
+
+    this->fluidParam = fluidParam;
 }
 
 
@@ -33,30 +35,35 @@ Cell::~Cell()
 	delete [] InterfaceList;
 }
 
-void Cell::update(double dt, double G0, double beta, double Tave)
+void Cell::update()
 {
     this->storeOldValues();
 
     // negative interfaces = in flux
     // positive interfaces = out flux
-    this->cons[0] += ( this->InterfaceList[0]->getMassMomentumFlux().rho
-                     + this->InterfaceList[1]->getMassMomentumFlux().rho
-                     - this->InterfaceList[2]->getMassMomentumFlux().rho
-                     - this->InterfaceList[3]->getMassMomentumFlux().rho
+    this->cons[0] += ( this->InterfaceList[0]->getFlux().rho
+                     + this->InterfaceList[1]->getFlux().rho
+                     - this->InterfaceList[2]->getFlux().rho
+                     - this->InterfaceList[3]->getFlux().rho
                      ) / (this->dx*this->dy);
 
-    this->cons[1] += ( this->InterfaceList[0]->getMassMomentumFlux().rhoU
-                     + this->InterfaceList[1]->getMassMomentumFlux().rhoU
-                     - this->InterfaceList[2]->getMassMomentumFlux().rhoU
-                     - this->InterfaceList[3]->getMassMomentumFlux().rhoU
+    this->cons[1] += ( this->InterfaceList[0]->getFlux().rhoU
+                     + this->InterfaceList[1]->getFlux().rhoU
+                     - this->InterfaceList[2]->getFlux().rhoU
+                     - this->InterfaceList[3]->getFlux().rhoU
                      ) / (this->dx*this->dy);
 
-    this->cons[2] += ( this->InterfaceList[0]->getMassMomentumFlux().rhoV
-                     + this->InterfaceList[1]->getMassMomentumFlux().rhoV
-                     - this->InterfaceList[2]->getMassMomentumFlux().rhoV
-                     - this->InterfaceList[3]->getMassMomentumFlux().rhoV
-                     ) / (this->dx*this->dy)
-                   + this->getPrimOld().rho*beta*G0*(this->getPrimOld().T - Tave)*dt;
+    this->cons[2] += ( this->InterfaceList[0]->getFlux().rhoV
+                     + this->InterfaceList[1]->getFlux().rhoV
+                     - this->InterfaceList[2]->getFlux().rhoV
+                     - this->InterfaceList[3]->getFlux().rhoV
+                     ) / (this->dx*this->dy);
+
+    this->cons[3] += ( this->InterfaceList[0]->getFlux().rhoE
+                     + this->InterfaceList[1]->getFlux().rhoE
+                     - this->InterfaceList[2]->getFlux().rhoE
+                     - this->InterfaceList[3]->getFlux().rhoE
+                     ) / (this->dx*this->dy);
 
     this->computePrim();
 }
@@ -143,14 +150,14 @@ void Cell::computeCons()
                   + 0.5 * (this->cons[1] * this->cons[1] + this->cons[2] * this->cons[2])/this->prim[0];
 }
 
-double Cell::getLocalTimestep(double nu)
+double Cell::getLocalTimestep()
 {
     double velocitySquare = this->getPrim().U*this->getPrim().U
                           + this->getPrim().V*this->getPrim().V;
     double localTimestep =  min(dx, dy) 
                          / ( velocitySquare
                            + 1.0/sqrt(3.0) 
-                           + 2.0*nu/min(dx, dy) );
+                           + 2.0*this->fluidParam.nu/min(dx, dy) );
     return localTimestep;
 }
 

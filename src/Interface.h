@@ -22,7 +22,7 @@ private:
     double Flux[4];
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal);
+	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam);
 	~Interface();
 
 	void computeFlux(double dt, double tau);

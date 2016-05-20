@@ -36,15 +36,6 @@ struct Parameters
 	unsigned int numberOfIterations;
     unsigned int outputInterval;
 
-	double nu;
-	double k;
-    double tauMassMomentum;
-    double tauHeat;
-
-	double G0;
-	double beta;
-	double TAve;
-
 	double CFL;
 
     bool verbose;

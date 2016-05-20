@@ -44,13 +44,13 @@ private:
 
 public:
 	Cell();
-	Cell(double centerX, double centerY, double dx, double dy, BoundaryCondition* BC);
+	Cell(double centerX, double centerY, double dx, double dy, BoundaryCondition* BC, FluidParameter fluidParam);
 
 	~Cell();
 
 	void addInterface(Interface* newInterface, int direction);
 
-	void update(double dt, double G0, double beta, double Tave);
+	void update();
 
     void storeOldValues();
 
@@ -62,7 +62,7 @@ public:
 
     void computeCons();
 
-    double getLocalTimestep(double nu);
+    double getLocalTimestep();
 
 	float2 getCenter();
 

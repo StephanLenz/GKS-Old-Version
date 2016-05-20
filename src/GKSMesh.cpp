@@ -13,9 +13,10 @@ GKSMesh::GKSMesh()
 {
 }
 
-GKSMesh::GKSMesh(Parameters param)
+GKSMesh::GKSMesh(Parameters param, FluidParameter fluidParam)
 {
     this->param = param;
+    this->fluidParam = fluidParam;
     this->iter = 0;
 }
 
@@ -55,7 +56,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
             else                 currentBC = NULL;
 
 			//                      cell centerX         cell centerY
-			tmpCell = new Cell(((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC);
+			tmpCell = new Cell(((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC, this->fluidParam);
 			// add interface to list
 			this->CellList.push_back(tmpCell);
 		}
@@ -73,7 +74,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 		for (int j = 0; j < nx + 1; j++)    // X-Direction
 		{
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(CellList[i*(nx + 2) + j], CellList[i*(nx + 2) + (j + 1)], 0, normal);
+			tmpInterface = new Interface(CellList[i*(nx + 2) + j], CellList[i*(nx + 2) + (j + 1)], 0, normal, this->fluidParam);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -91,7 +92,7 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 		for (int j = 0; j <= nx + 1; j++)   // X-Direction
 		{
 			// create a new interface with the adjacent cells
-			tmpInterface = new Interface(CellList[i*(nx + 2) + j], CellList[(i + 1)*(nx + 2) + j], 1, normal);
+			tmpInterface = new Interface(CellList[i*(nx + 2) + j], CellList[(i + 1)*(nx + 2) + j], 1, normal, this->fluidParam);
 			// add itnerface to list
 			this->InterfaceList.push_back(tmpInterface);
 		}
@@ -152,7 +153,7 @@ void GKSMesh::computeGlobalTimestep()
     {
         if (!((*i)->isGhostCell()))
         {
-            this->dt = min( (*i)->getLocalTimestep(this->param.nu), this->dt );
+            this->dt = min( (*i)->getLocalTimestep(), this->dt );
         }
     }
     this->dt *= this->param.CFL;
@@ -179,14 +180,14 @@ void GKSMesh::timeStep()
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         if( !(*i)->isGhostInterface() )
-            (*i)->computeFlux(this->dt, this->param.tauMassMomentum);
+            (*i)->computeFlux(this->dt, this->fluidParam.nu*3.0);
     }
 
     if (this->param.verbose) cout << "  Update Cells ..." << endl;
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         if( !(*i)->isGhostCell() )
-            (*i)->update(this->dt, this->param.G0, this->param.beta, this->param.TAve);
+            (*i)->update();
     }
 
     // ========================================================================
@@ -325,7 +326,7 @@ void GKSMesh::writeData(ofstream& file)
     file << "T 1 " << this->CellList.size() << " float\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
-        file << (*i)->getPrim().T << endl;
+        file << (*i)->getPrim().L << endl;
     }
     file << "GhostCell 1 " << this->CellList.size() << " int\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
