@@ -24,8 +24,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 1.0;
 
-    param.numberOfIterations = 100;
-    param.outputInterval = 1;
+    param.numberOfIterations = 1000000;
+    param.outputInterval = 100000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
 
     FluidParameter fluidParam;
 
-    fluidParam.K  = 0;
-    fluidParam.nu = 1e-3;
+    fluidParam.K  = 1;
+    fluidParam.nu = 1e-4;
     fluidParam.R = 200.0;
     
     double uTop = 0.01;
@@ -57,7 +57,7 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1, 0.0, uTop, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 10, 10);
+    mesh->generateRectMesh(W, H, 100, 100);
 
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
