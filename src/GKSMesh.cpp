@@ -213,6 +213,9 @@ void GKSMesh::iterate()
             ostringstream filename;
             filename << "out/result_" << this->iter << ".vtk";
             writeVTKFile(filename.str(), true, false);
+            ostringstream filenameFlux;
+            filenameFlux << "out/resultFlux_" << this->iter << ".vtk";
+            writeVTKFileFlux(filenameFlux.str(), true, false);
         }
         //cout << this->toString();
         //cout << this->cellValuesToString();
@@ -252,20 +255,41 @@ void GKSMesh::writeVTKFile(string filename, bool data, bool BC)
 	file.open(filename.c_str());
 
 	if (!file.is_open()) {
-		cout << " File cound not be opened.\n\nERROR TERMINATION!\n\n\n";
+		cout << " File cound not be opened.\n\nERROR!\n\n\n";
 		return;
 	}
 
-    this->writeGeometry(file);
+    this->writeCellGeometry(file);
 
-    if (data) this->writeData(file);
+    if (data) this->writeCellData(file);
 
     file.close();
 
     cout << "done!" << endl;
 }
 
-void GKSMesh::writeGeometry(ofstream& file)
+void GKSMesh::writeVTKFileFlux(string filename, bool data, bool BC)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    this->writeInterfaceGeometry(file);
+
+    if (data) this->writeInterfaceData(file);
+
+    file.close();
+
+    cout << "done!" << endl;
+}
+
+void GKSMesh::writeCellGeometry(ofstream& file)
 {
 
     // write VTK Header
@@ -302,7 +326,39 @@ void GKSMesh::writeGeometry(ofstream& file)
     }
 }
 
-void GKSMesh::writeData(ofstream& file)
+void GKSMesh::writeInterfaceGeometry(ofstream& file)
+{
+
+    // write VTK Header
+    file << "# vtk DataFile Version 1.0\n";
+    file << "by Stephan Lenz\n";
+    file << "ASCII\n";
+    file << "DATASET UNSTRUCTURED_GRID\n";
+
+    // write nodes
+    file << "POINTS " << this->InterfaceList.size()<< " float\n";
+
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->writeCenter();
+    }
+
+    // write elements
+    file << "CELLS " << this->InterfaceList.size() << " " << 2 * this->InterfaceList.size() << endl;
+    for (int i = 0; i < this->InterfaceList.size(); ++i)
+    {
+        file << 1 << " " << i << endl;
+    }
+
+    // write element tyes( 9 = quad element )
+    file << "CELL_TYPES " << this->InterfaceList.size() << endl;
+    for (int i = 0; i < this->InterfaceList.size(); ++i)
+    {
+        file << "1" << endl;
+    }
+}
+
+void GKSMesh::writeCellData(ofstream& file)
 {
     // write cell data ( ID and stress )
     file << "CELL_DATA " << this->CellList.size() << endl;
@@ -332,6 +388,46 @@ void GKSMesh::writeData(ofstream& file)
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         if ((*i)->isGhostCell())
+            file << 1 << endl;
+        else
+            file << 0 << endl;
+    }
+}
+
+void GKSMesh::writeInterfaceData(ofstream & file)
+{
+    // write cell data ( ID and stress )
+    file << "POINT_DATA " << this->InterfaceList.size() << endl;
+    file << "FIELD Lable 5\n";
+
+    file << "rho 1 " << this->InterfaceList.size() << " float\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getFlux().rho << endl;
+    }
+
+    file << "rhoU 1 " << this->InterfaceList.size() << " float\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getFlux().rhoU << endl;
+    }
+
+    file << "rhoV 1 " << this->InterfaceList.size() << " float\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getFlux().rhoV << endl;
+    }
+
+    file << "rhoE 1 " << this->InterfaceList.size() << " float\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        file << (*i)->getFlux().rhoE << endl;
+    }
+
+    file << "GhostInterface 1 " << this->InterfaceList.size() << " int\n";
+    for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
+    {
+        if ((*i)->isGhostInterface())
             file << 1 << endl;
         else
             file << 0 << endl;

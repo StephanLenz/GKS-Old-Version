@@ -94,7 +94,7 @@ void Interface::computeFlux(double dt, double tau)
 
     // compute mass and momentum fluxes
 
-    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy);
+    this->assembleFlux(MomentU, MomentV, MomentXi, a, b, A, timeCoefficients, dy, prim);
 
     // in case of horizontal interface (G interface), swap velocity fluxes
     if (this->axis == 1)
@@ -137,6 +137,17 @@ string Interface::toString()
     tmp << "\n";
     tmp << "\n";
 	return tmp.str();
+}
+
+string Interface::writeCenter()
+{
+    double x = 0.5 * ( this->posCell->getCenter().x + this->negCell->getCenter().x );
+    double y = 0.5 * ( this->posCell->getCenter().y + this->negCell->getCenter().y );
+
+    ostringstream tmp;
+    tmp << x << " " << y << " 0.0\n";
+
+    return tmp.str();
 }
 
 void Interface::interpolatePrim(double * prim)
@@ -318,9 +329,14 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
     timeGrad[1] /= -prim[0];
     timeGrad[2] /= -prim[0];
     timeGrad[3] /= -prim[0];
+
+    //timeGrad[0] *= -1.0;
+    //timeGrad[1] *= -1.0;
+    //timeGrad[2] *= -1.0;
+    //timeGrad[3] *= -1.0;
 }
 
-void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy)
+void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim)
 {
     double Flux_1[4];
     double Flux_2[4];
@@ -416,8 +432,8 @@ void Interface::computeMicroSlope(double * prim, double * macroSlope, double * m
     C = macroSlope[2] - prim[2] * macroSlope[0];
 
     // compute micro slopes of primitive variables from macro slopes of conservatice variables
-    microSlope[3] = 2.0 * (4.0 * prim[3]*prim[3])/(this->fluidParam.K + 2.0)
-                        * ( A - 2.0*prim[1]*B - 2.0*prim[2]*C );
+    microSlope[3] = (4.0 * prim[3]*prim[3])/(this->fluidParam.K + 2.0)
+                  * ( A - 2.0*prim[1]*B - 2.0*prim[2]*C );
 
     microSlope[2] = 2.0 * prim[3] * C - prim[2] * microSlope[3];
 

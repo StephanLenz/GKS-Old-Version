@@ -34,6 +34,8 @@ public:
 
 	string toString();
 
+    string writeCenter();
+
 private:
 
     void interpolatePrim(double* prim);
@@ -43,7 +45,7 @@ private:
                                double* a, double* b, double * timeGrad);
 
     void assembleFlux(double* MomentU, double* MomentV, double* MomentXi, 
-                      double* a, double* b, double* A, double* timeCoefficients, double dy);
+                      double* a, double* b, double* A, double* timeCoefficients, double dy, double* prim);
 
     void rotate(double* vector);
 

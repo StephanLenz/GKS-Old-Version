@@ -58,11 +58,17 @@ public:
 
 	void writeVTKFile(string filename, bool data = true, bool BC = false);
 
+    void writeVTKFileFlux(string filename, bool data = true, bool BC = false);
+
 private:
 
-    void writeGeometry(ofstream& file);
+    void writeCellGeometry(ofstream& file);
 
-    void writeData(ofstream& file);
+    void writeInterfaceGeometry(ofstream& file);
+
+    void writeCellData(ofstream& file);
+
+    void writeInterfaceData(ofstream& file);
 };
 
 #endif
