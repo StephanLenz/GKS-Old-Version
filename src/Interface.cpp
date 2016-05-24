@@ -43,7 +43,7 @@ Interface::~Interface()
 {
 }
 
-void Interface::computeFlux(double dt, double tau)
+void Interface::computeFlux(double dt)
 {
     const int NUMBER_OF_MOMENTS = 7;
 
@@ -64,11 +64,14 @@ void Interface::computeFlux(double dt, double tau)
     double dy = this->posCell->getDx().x * normal.y
               + this->posCell->getDx().y * normal.x;
 
-    // time integration Coefficients
-    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
-
     this->interpolatePrim(prim);
     this->differentiateCons(normalGradCons, tangentialGradCons, prim);
+
+    // Formular as in the Rayleigh-Bernard-Paper (Xu, Lui, 1999)
+    double tau = 2.0*prim[3] * this->fluidParam.nu;
+
+    // time integration Coefficients
+    double timeCoefficients[3] = { dt, -tau*dt, 0.5*dt*dt - tau*dt };
 
     // in case of horizontal interface (G interface), swap velocity directions
     if (this->axis == 1)
@@ -329,11 +332,6 @@ void Interface::computeTimeDerivative(double * prim, double * MomentU, double * 
     timeGrad[1] /= -prim[0];
     timeGrad[2] /= -prim[0];
     timeGrad[3] /= -prim[0];
-
-    //timeGrad[0] *= -1.0;
-    //timeGrad[1] *= -1.0;
-    //timeGrad[2] *= -1.0;
-    //timeGrad[3] *= -1.0;
 }
 
 void Interface::assembleFlux(double * MomentU, double * MomentV, double * MomentXi, double * a, double * b, double * A, double * timeCoefficients, double dy, double* prim)

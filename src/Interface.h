@@ -25,7 +25,7 @@ public:
 	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam);
 	~Interface();
 
-	void computeFlux(double dt, double tau);
+	void computeFlux(double dt);
 
     Cell* getNeigborCell(Cell* askingCell);
     ConservedVariable getFlux();

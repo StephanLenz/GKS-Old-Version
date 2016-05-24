@@ -13,6 +13,8 @@ using namespace std;
 
 int main(int argc, char* argv[])
 {
+    /*
+
     // ========================================================================
     //
     //                  Couette-Flow
@@ -24,7 +26,7 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 3.0;
 
-    param.numberOfIterations = 1000000;
+    param.numberOfIterations = 100000;
     param.outputInterval = 10000;
     param.CFL = 0.5;
 
@@ -61,6 +63,8 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
 
+    */
+
     /*
 
     // ========================================================================
@@ -74,8 +78,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 3.0;
 
-    param.numberOfIterations = 10000;
-    param.outputInterval = 1000;
+    param.numberOfIterations = 100000;
+    param.outputInterval = 10000;
     param.CFL = 0.5;
 
     param.verbose = false;
@@ -85,10 +89,11 @@ int main(int argc, char* argv[])
     FluidParameter fluidParam;
 
     fluidParam.K  = 1;
-    fluidParam.nu = 1e-4;
+    fluidParam.nu = 1e-6;
     fluidParam.R = 200.0;
     
     double TAve = 10.0;
+    double rho[] = { 1.0, 10.0 };
 
     // ========================================================================
 
@@ -105,15 +110,21 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(0, 1, 1, 1,  9.0, 0.0, 0.0, 0.0);
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
 
+    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
+    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
+    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
+    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
+
     // Generate Mesh
     mesh->generateRectMesh(W, H, 90, 30);
 
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
+    // mesh->initMeshLinearDensity(rho, 0.0, 0.0, TAve);
 
     */
 
-    /*
+    ///*
 
     // ========================================================================
     //
@@ -164,7 +175,7 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
 
-    */
+    //*/
 
     // ========================================================================
     // ========================================================================

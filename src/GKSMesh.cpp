@@ -123,10 +123,31 @@ void GKSMesh::initMeshLinearTemperature(double rho, double u, double v, double* 
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
 	{
 		center = (*i)->getCenter();
-		//interpolatedT = ( center.y*T[0] + (lengthY - center.y)*T[1] ) / lengthY;
+
         interpolatedT = T[0] + center.y*(T[1] - T[0]) / this->lengthY;
+
 		(*i)->setValues(rho, u, v, interpolatedT);
 	}
+}
+
+void GKSMesh::initMeshLinearDensity(double * rho, double u, double v, double T)
+{
+    // Densitsy definition
+    //    ------------
+    //    |  rho[1]  |
+    //    |          |
+    //    | rhoT[0]  |
+    //    ------------
+    double interpolatedRho;
+    float2 center;
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        center = (*i)->getCenter();
+
+        interpolatedRho = rho[0] + center.y*(rho[1] - rho[0]) / this->lengthY;
+
+        (*i)->setValues(interpolatedRho, u, v, T);
+    }
 }
 
 void GKSMesh::addBoundaryCondition( int rhoType, int UType, int VType, int TType, 
@@ -180,7 +201,7 @@ void GKSMesh::timeStep()
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         if( !(*i)->isGhostInterface() )
-            (*i)->computeFlux(this->dt, this->fluidParam.nu*3.0);
+            (*i)->computeFlux(this->dt);
     }
 
     if (this->param.verbose) cout << "  Update Cells ..." << endl;
@@ -203,6 +224,9 @@ void GKSMesh::iterate()
     ostringstream filename;
     filename << "out/result_0.vtk";
     writeVTKFile(filename.str(), true, false);
+    ostringstream filenameFlux;
+    filenameFlux << "out/resultFlux_0.vtk";
+    writeVTKFileFlux(filenameFlux.str(), true, false);
 
     while (this->iter < this->param.numberOfIterations)
     {
@@ -362,28 +386,32 @@ void GKSMesh::writeCellData(ofstream& file)
 {
     // write cell data ( ID and stress )
     file << "CELL_DATA " << this->CellList.size() << endl;
-    file << "FIELD Lable 5\n";
+    file << "FIELD Lable 9\n";
 
     file << "rho 1 " << this->CellList.size() << " float\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().rho << endl;
     }
+
     file << "U 1 " << this->CellList.size() << " float\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().U << endl;
     }
+
     file << "V 1 " << this->CellList.size() << " float\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().V << endl;
     }
-    file << "T 1 " << this->CellList.size() << " float\n";
+
+    file << "Lambda 1 " << this->CellList.size() << " float\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().L << endl;
     }
+
     file << "GhostCell 1 " << this->CellList.size() << " int\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
@@ -392,6 +420,32 @@ void GKSMesh::writeCellData(ofstream& file)
         else
             file << 0 << endl;
     }
+
+    file << "rho 1 " << this->CellList.size() << " float\n";
+    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    {
+        file << (*i)->getCons().rho << endl;
+    }
+
+    file << "rhoU 1 " << this->CellList.size() << " float\n";
+    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    {
+        file << (*i)->getCons().rhoU << endl;
+    }
+
+    file << "rhoV 1 " << this->CellList.size() << " float\n";
+    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    {
+        file << (*i)->getCons().rhoV << endl;
+    }
+
+    file << "rhoE 1 " << this->CellList.size() << " float\n";
+    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
+    {
+        file << (*i)->getCons().rhoE << endl;
+    }
+
+
 }
 
 void GKSMesh::writeInterfaceData(ofstream & file)

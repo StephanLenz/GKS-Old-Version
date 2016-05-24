@@ -42,6 +42,8 @@ public:
 
 	void initMeshLinearTemperature(double rho, double u, double v, double * T);
 
+    void initMeshLinearDensity(double* rho, double u, double v, double T);
+
     void addBoundaryCondition(  int rhoType, int UType, int VType, int TType,
                                 double rho, double U, double V, double T);
 

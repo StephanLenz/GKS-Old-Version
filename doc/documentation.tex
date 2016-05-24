@@ -226,6 +226,7 @@ The constants $a_i$, $b_i$ and $A_i$ in the Taylor expansion of the Maxwellian d
 
 \begin{eqnarray}
 \begin{split}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
 \begin{array}{lcll}
 A &=& 2 \dfrac{\partial (\rho E)}{\partial x} 
   - ( U^2 + V^2 + \dfrac{K+2}{2\lambda} \dfrac{\partial\rho}{\partial x} ) &
@@ -241,6 +242,7 @@ C &=& \dfrac{\partial (\rho V)}{\partial x} - V\dfrac{\partial \rho}{\partial x}
 
 \begin{eqnarray}
 \begin{split}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
 \begin{array}{lcl}
 a_4 &=& \dfrac{4 \lambda^2}{K+2} ( A - 2 U B - 2 V C )
 \\
@@ -556,6 +558,41 @@ s ~
 \end{equation}
 
 The swap of the momentum components in shown by the Rotation Matrix $\uuu{R}$ which just rotates the second and third component.
+
+\clearpage
+
+\section{Some Formulas}
+
+From the Rayleigh-Bernard-Paper (Xu, Lui, 1999):
+
+\begin{equation}
+\lambda = \frac{1}{2RT}
+\end{equation}
+
+\begin{equation}
+\tau = \frac{\nu}{RT} = 2\lambda\nu
+\end{equation}
+
+From the GKS-Book (Xu, 2015):
+
+\begin{equation}
+\lambda =\frac{(K+2)\rho}
+{4\left( \rho E - \dfrac{1}{2} \dfrac{(\rho U)^2 + (\rho V)^2}{\rho}  \right)}
+\end{equation}
+
+The first moments of the Maxwell distribution:
+
+\begin{equation}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcl}
+\mom{1} &=& 1 \\
+\mom{u} &=& U \\
+\mom{u^2} &=& U^2 + \dfrac{1}{2\lambda} \\
+\mom{u^3} = U^3 + U\dfrac{1}{2\lambda} + \dfrac{1}{\lambda} U &=& U^2 + \dfrac{3}{2\lambda} U \\
+\mom{u^4} = U^4 + \dfrac{3}{2\lambda} U^2 + \dfrac{3}{2\lambda} \left(U^2 + \dfrac{1}{2\lambda} \right)
+		  &=& U^4 + \dfrac{3}{\lambda} U^2 + \dfrac{3}{4\lambda^2}
+\end{array}
+\end{equation}
 
 
 
