@@ -24,7 +24,7 @@ int main(int argc, char* argv[])
     Parameters param;
 
     double H = 1.0;
-    double W = 3.0;
+    double W = 0.2;
 
     param.numberOfIterations = 100000;
     param.outputInterval = 10000;
@@ -58,25 +58,25 @@ int main(int argc, char* argv[])
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.1, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 90, 30);
+    mesh->generateRectMesh(W, H, 2, 10);
 
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
 
     */
 
-    /*
+   // /*
 
     // ========================================================================
     //
-    //                  Poiseulle-Flow (Pressure driven)
+    //                  Poiseulle-Flow (Force driven)
     //
     // ========================================================================
 
     Parameters param;
 
     double H = 1.0;
-    double W = 3.0;
+    double W = 0.2;
 
     param.numberOfIterations = 100000;
     param.outputInterval = 10000;
@@ -89,11 +89,10 @@ int main(int argc, char* argv[])
     FluidParameter fluidParam;
 
     fluidParam.K  = 1;
-    fluidParam.nu = 1e-6;
+    fluidParam.nu = 1e-4;
     fluidParam.R = 200.0;
     
     double TAve = 10.0;
-    double rho[] = { 1.0, 10.0 };
 
     // ========================================================================
 
@@ -101,30 +100,22 @@ int main(int argc, char* argv[])
 
     // Define Boundary Conditions
     //    -----------
-    //    |    3    |
-    //    | 0     2 |
     //    |    1    |
+    //    |         |
+    //    |    0    |
     //    -----------
-    mesh->addBoundaryCondition(0, 1, 1, 1, 10.0, 0.0, 0.0, 0.0);
     mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(0, 1, 1, 1,  9.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
-
-    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
-    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
-    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
-    // mesh->addBoundaryCondition(1, 1, 1, 1,  0.0, 0.0, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.1, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 90, 30);
+    mesh->generateRectMeshPeriodic(W, H, 2, 10);
 
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
-    // mesh->initMeshLinearDensity(rho, 0.0, 0.0, TAve);
 
-    */
+    //*/
 
-    ///*
+    /*
 
     // ========================================================================
     //
@@ -175,7 +166,7 @@ int main(int argc, char* argv[])
     // Initialize Values
     mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
 
-    //*/
+    */
 
     // ========================================================================
     // ========================================================================
@@ -184,6 +175,8 @@ int main(int argc, char* argv[])
     // ========================================================================
 
     mesh->applyBoundaryCondition();
+
+    //cout << mesh->toString();
 
     mesh->iterate();
     //char a; cin >> a;

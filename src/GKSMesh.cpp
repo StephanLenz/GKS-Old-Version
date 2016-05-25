@@ -102,6 +102,94 @@ void GKSMesh::generateRectMesh(double lengthX, double lengthY, int nx, int ny)
 	return;
 }
 
+void GKSMesh::generateRectMeshPeriodic(double lengthX, double lengthY, int nx, int ny)
+{
+    double dx = lengthX / (double)nx;
+    double dy = lengthY / (double)ny;
+
+    this->lengthX = lengthX;
+    this->lengthY = lengthY;
+
+    Cell*		tmpCell;
+    Interface*  tmpInterface;
+    float2      normal;
+
+    //=========================================================================
+    //=========================================================================
+    //		Cell generation
+    //			including ghost cells in y-direction
+    //=========================================================================
+    //=========================================================================
+    BoundaryCondition* currentBC = NULL;
+    for (int i = -1; i < ny + 1; i++)       // Y-Direction
+    {
+
+        for (int j = 0; j < nx; j++)   // X-Direction
+        {
+            if (i == -1)         currentBC = BoundaryConditionList[0];
+            else if (i == ny)    currentBC = BoundaryConditionList[1];
+            else                 currentBC = NULL;
+
+            //                      cell centerX         cell centerY
+            tmpCell = new Cell(((double)j + 0.5)*dx, ((double)i + 0.5)*dy, dx, dy, currentBC, this->fluidParam);
+            // add interface to list
+            this->CellList.push_back(tmpCell);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						F interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 1;
+    normal.y = 0;
+    for (int i = 0; i <= ny + 1; i++)       // Y-Direction
+    {
+        for (int j = 0; j < nx; j++)    // X-Direction
+        {
+            Cell* negCell;
+            Cell* posCell;
+
+            if (j == 0)
+                negCell = CellList[i*(nx) + (nx-1)];
+            else
+                negCell = CellList[i*(nx) + (j-1)];
+
+            if (j == nx)
+                posCell = CellList[i*(nx)];
+            else
+                posCell = CellList[i*(nx) + j];
+
+            // create a new interface with the adjacent cells
+            tmpInterface = new Interface( negCell, posCell, 0, normal, this->fluidParam);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+    //=========================================================================
+    //=========================================================================
+    //						G interface generation
+    //=========================================================================
+    //=========================================================================
+    normal.x = 0;
+    normal.y = 1;
+    for (int i = 0; i < ny + 1; i++)        // Y-Direction
+    {
+        for (int j = 0; j < nx; j++)        // X-Direction
+        {
+            // create a new interface with the adjacent cells
+            tmpInterface = new Interface(CellList[i*(nx) + j], CellList[(i + 1)*(nx) + j], 1, normal, this->fluidParam);
+            // add itnerface to list
+            this->InterfaceList.push_back(tmpInterface);
+        }
+    }
+
+
+    return;
+}
+
 void GKSMesh::initMeshConstant(double rho, double u, double v, double T)
 {
 	for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
@@ -253,7 +341,7 @@ string GKSMesh::toString()
 
 	for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
 	{
-        if( ! (*i)->isGhostInterface() )
+        //if( ! (*i)->isGhostInterface() )
 		tmp << (*i)->toString();
 	}
 
@@ -386,27 +474,27 @@ void GKSMesh::writeCellData(ofstream& file)
 {
     // write cell data ( ID and stress )
     file << "CELL_DATA " << this->CellList.size() << endl;
-    file << "FIELD Lable 9\n";
+    file << "FIELD Lable 8\n";
 
-    file << "rho 1 " << this->CellList.size() << " float\n";
+    file << "rho 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().rho << endl;
     }
 
-    file << "U 1 " << this->CellList.size() << " float\n";
+    file << "U 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().U << endl;
     }
 
-    file << "V 1 " << this->CellList.size() << " float\n";
+    file << "V 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().V << endl;
     }
 
-    file << "Lambda 1 " << this->CellList.size() << " float\n";
+    file << "Lambda 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getPrim().L << endl;
@@ -421,25 +509,19 @@ void GKSMesh::writeCellData(ofstream& file)
             file << 0 << endl;
     }
 
-    file << "rho 1 " << this->CellList.size() << " float\n";
-    for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
-    {
-        file << (*i)->getCons().rho << endl;
-    }
-
-    file << "rhoU 1 " << this->CellList.size() << " float\n";
+    file << "rhoU 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getCons().rhoU << endl;
     }
 
-    file << "rhoV 1 " << this->CellList.size() << " float\n";
+    file << "rhoV 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getCons().rhoV << endl;
     }
 
-    file << "rhoE 1 " << this->CellList.size() << " float\n";
+    file << "rhoE 1 " << this->CellList.size() << " double\n";
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         file << (*i)->getCons().rhoE << endl;
@@ -454,25 +536,25 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     file << "POINT_DATA " << this->InterfaceList.size() << endl;
     file << "FIELD Lable 5\n";
 
-    file << "rho 1 " << this->InterfaceList.size() << " float\n";
+    file << "rho 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rho << endl;
     }
 
-    file << "rhoU 1 " << this->InterfaceList.size() << " float\n";
+    file << "rhoU 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rhoU << endl;
     }
 
-    file << "rhoV 1 " << this->InterfaceList.size() << " float\n";
+    file << "rhoV 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rhoV << endl;
     }
 
-    file << "rhoE 1 " << this->InterfaceList.size() << " float\n";
+    file << "rhoE 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rhoE << endl;

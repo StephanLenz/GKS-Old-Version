@@ -136,7 +136,9 @@ string Interface::toString()
 	tmp << "\n";
 	tmp << this->posCell->toString();
 	tmp << "\n";
-    tmp << this->Flux[0] << " " << this->Flux[1] << " " << this->Flux[2] << " " << this->Flux[3];
+    //tmp << this->Flux[0] << " " << this->Flux[1] << " " << this->Flux[2] << " " << this->Flux[3];
+    if (this->isGhostInterface())
+        tmp << "GhostInterface";
     tmp << "\n";
     tmp << "\n";
 	return tmp.str();

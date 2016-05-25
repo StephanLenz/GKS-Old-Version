@@ -38,6 +38,8 @@ public:
 
 	void generateRectMesh(double lengthX, double lengthY, int nx, int ny);
 
+    void generateRectMeshPeriodic(double lengthX, double lengthY, int nx, int ny);
+
 	void initMeshConstant(double rho, double u, double v, double T);
 
 	void initMeshLinearTemperature(double rho, double u, double v, double * T);
