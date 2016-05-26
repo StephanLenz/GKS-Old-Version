@@ -594,7 +594,34 @@ The first moments of the Maxwell distribution:
 \end{array}
 \end{equation}
 
+\clearpage
 
+\section{Poiseulle Flow}
+
+\begin{eqnarray}
+\begin{split}
+\arraycolsep=1.4pt\def\arraystretch{2.2}
+\begin{array}{lcl}
+u\dfrac{\partial u}{\partial x} + v\dfrac{\partial u}{\partial v}
+&=& 
+-\dfrac{1}{\rho} \dfrac{\partial p}{\partial x}
++ \nu \left( \dfrac{\partial^2 u}{\partial x^2} + \dfrac{\partial^2 u}{\partial y^2} \right)
+\\
+0 &=& -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} + \nu \dfrac{\partial^2 u}{\partial y^2}
+\\
+\dfrac{\partial^2 u}{\partial y^2} 
+&=&
+-\dfrac{1}{\nu} \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} \right)
+\\
+u(y) &=& \dfrac{1}{2\nu} \left( Hy - y^2 \right) 
+         \left( -\dfrac{1}{\rho} \dfrac{\partial p}{\partial x} \right)
+\\
+u(y) &=& \dfrac{1}{2\nu} \left( Hy - y^2 \right) \dfrac{G}{\rho}
+\\
+u_{max} &=& \dfrac{GH^2}{8\nu\rho}
+\end{array}
+\end{split}
+\end{eqnarray}
 
 
 

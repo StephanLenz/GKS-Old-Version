@@ -29,6 +29,7 @@ struct FluidParameter
     int K;   
     double nu;  // viscosity
     double R;   // spez gasconstant
+    float2 Force;
 };
 
 struct Parameters

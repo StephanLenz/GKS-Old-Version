@@ -278,10 +278,7 @@ void GKSMesh::timeStep()
     this->computeGlobalTimestep();
     if (this->param.verbose) cout << "    dt = " << this->dt << endl;
 
-    // ========================================================================
-
-    if (this->param.verbose) cout << "  Apply Boundary Conditions ..." << endl;
-    this->applyBoundaryCondition();
+    this->dtList.push_back(this->dt);
 
     // ========================================================================
 
@@ -296,7 +293,7 @@ void GKSMesh::timeStep()
     for (vector<Cell*>::iterator i = CellList.begin(); i != CellList.end(); ++i)
     {
         if( !(*i)->isGhostCell() )
-            (*i)->update();
+            (*i)->update(this->dt);
     }
 
     // ========================================================================
@@ -399,6 +396,24 @@ void GKSMesh::writeVTKFileFlux(string filename, bool data, bool BC)
     file.close();
 
     cout << "done!" << endl;
+}
+
+void GKSMesh::writeTimeSteps(string filename)
+{
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<double>::iterator i = this->dtList.begin(); i != this->dtList.end(); ++i)
+        file << (*i) << "\n";
+
+    file.close();
 }
 
 void GKSMesh::writeCellGeometry(ofstream& file)
@@ -536,25 +551,25 @@ void GKSMesh::writeInterfaceData(ofstream & file)
     file << "POINT_DATA " << this->InterfaceList.size() << endl;
     file << "FIELD Lable 5\n";
 
-    file << "rho 1 " << this->InterfaceList.size() << " double\n";
+    file << "F_rho 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rho << endl;
     }
 
-    file << "rhoU 1 " << this->InterfaceList.size() << " double\n";
+    file << "F_rhoU 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rhoU << endl;
     }
 
-    file << "rhoV 1 " << this->InterfaceList.size() << " double\n";
+    file << "F_rhoV 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rhoV << endl;
     }
 
-    file << "rhoE 1 " << this->InterfaceList.size() << " double\n";
+    file << "F_rhoE 1 " << this->InterfaceList.size() << " double\n";
     for (vector<Interface*>::iterator i = InterfaceList.begin(); i != InterfaceList.end(); ++i)
     {
         file << (*i)->getFlux().rhoE << endl;

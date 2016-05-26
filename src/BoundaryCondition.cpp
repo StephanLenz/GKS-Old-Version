@@ -27,10 +27,10 @@ BoundaryCondition::~BoundaryCondition()
 
 short int BoundaryCondition::getType(short int i)
 {
-    return type[i];
+    return this->type[i];
 }
 
 double BoundaryCondition::getValue(short int i)
 {
-    return value[i];
+    return this->value[i];
 }

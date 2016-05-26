@@ -50,7 +50,7 @@ public:
 
 	void addInterface(Interface* newInterface, int direction);
 
-	void update();
+	void update(double dt);
 
     void storeOldValues();
 

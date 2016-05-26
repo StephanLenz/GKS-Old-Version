@@ -35,7 +35,7 @@ Cell::~Cell()
 	delete [] InterfaceList;
 }
 
-void Cell::update()
+void Cell::update(double dt)
 {
     this->storeOldValues();
 
@@ -65,6 +65,11 @@ void Cell::update()
                      - this->InterfaceList[3]->getFlux().rhoE
                      ) / (this->dx*this->dy);
 
+    // Apply Forcing
+    this->cons[1] += dt * this->fluidParam.Force.x;
+    this->cons[2] += dt * this->fluidParam.Force.y;
+
+    // compute primary Variables
     this->computePrim();
 }
 
@@ -120,12 +125,12 @@ void Cell::addInterface(Interface* newInterface, int direction)
 	this->InterfaceList[direction] = newInterface;
 }
 
-void Cell::setValues(double rho, double u, double v, double T)
+void Cell::setValues(double rho, double u, double v, double L)
 {
 	this->prim[0] = rho;
 	this->prim[1] = u;
 	this->prim[2] = v;
-	this->prim[3] = T;
+	this->prim[3] = L;
 
     this->computeCons();
 }

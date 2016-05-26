@@ -27,6 +27,7 @@ private:
 	double lengthY;
 
     double dt;
+    vector<double> dtList;
     unsigned int iter;
 
 public:
@@ -63,6 +64,8 @@ public:
 	void writeVTKFile(string filename, bool data = true, bool BC = false);
 
     void writeVTKFileFlux(string filename, bool data = true, bool BC = false);
+
+    void writeTimeSteps(string filename);
 
 private:
 

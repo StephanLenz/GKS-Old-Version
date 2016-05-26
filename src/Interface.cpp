@@ -421,7 +421,7 @@ void Interface::rotate(double * vector)
 
 void Interface::computeMicroSlope(double * prim, double * macroSlope, double * microSlope)
 {
-    double A, B, C, D, U_2_V_2;
+    double A, B, C, U_2_V_2;
 
     U_2_V_2 = prim[1] * prim[1] + prim[2] * prim[2];
 
@@ -449,13 +449,13 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentV,
     MomentU[0] = 1.0;
     MomentU[1] = prim[1];
     for (int i = 2; i < numberMoments; i++)
-        MomentU[i] = prim[1] * MomentU[i - 1] + 0.5*(i - 1)*MomentU[i - 2] * 2.0 / 3.0;
+        MomentU[i] = prim[1] * MomentU[i - 1] + (i - 1)/(2.0*prim[3])*MomentU[i - 2];
 
     //==================== V Moments ==========================================
     MomentV[0] = 1.0;
     MomentV[1] = prim[2];
     for (int i = 2; i < numberMoments; i++)
-        MomentV[i] = prim[2] * MomentV[i - 1] + 0.5*(i - 1)*MomentV[i - 2] * 2.0 / 3.0;
+        MomentV[i] = prim[2] * MomentV[i - 1] + (i - 1)/(2.0*prim[3])*MomentV[i - 2];
 
     //==================== Xi Moments =========================================
     MomentXi[0] = 1.0;
