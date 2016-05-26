@@ -342,74 +342,74 @@ void Interface::assembleFlux(double * MomentU, double * MomentV, double * Moment
     double Flux_2[4];
     double Flux_3[4];
 
-    Flux_1[0] = timeCoefficients[0] * MomentU[1];
-    Flux_1[1] = timeCoefficients[0] * MomentU[2];
-    Flux_1[2] = timeCoefficients[0] * MomentU[1] * MomentV[1];
-    Flux_1[3] = timeCoefficients[0] * 0.5 * (MomentU[3] + MomentU[1] * MomentV[2] + MomentU[1] * MomentXi[2]);
+    Flux_1[0] = MomentU[1];
+    Flux_1[1] = MomentU[2];
+    Flux_1[2] = MomentU[1] * MomentV[1];
+    Flux_1[3] = 0.5 * (MomentU[3] + MomentU[1] * MomentV[2] + MomentU[1] * MomentXi[2]);
 
-    Flux_2[0] = timeCoefficients[1] * ( a[0] * MomentU[2] 
-                                      + a[1] * MomentU[3]
-                                      + a[2] * MomentU[2] * MomentV[1]
-                                      + a[3] * 0.5 * ( MomentU[4] + MomentU[2]*MomentV[2] + MomentU[2]*MomentXi[2] )
-                                      + b[0] * MomentU[1] * MomentV[1]
-                                      + b[1] * MomentU[2] * MomentV[1]
-                                      + b[2] * MomentU[1] * MomentV[2]
-                                      + b[3] * 0.5 * ( MomentU[3]*MomentV[1] + MomentU[1]*MomentV[3] + MomentU[1]*MomentV[1]*MomentXi[2] )
-                                      );
-    Flux_2[1] = timeCoefficients[1] * ( a[0] * MomentU[3] 
-                                      + a[1] * MomentU[4]
-                                      + a[2] * MomentU[3] * MomentV[1]
-                                      + a[3] * 0.5 * ( MomentU[5] + MomentU[3]*MomentV[2] + MomentU[3]*MomentXi[2] )
-                                      + b[0] * MomentU[2] * MomentV[1]
-                                      + b[1] * MomentU[3] * MomentV[1]
-                                      + b[2] * MomentU[2] * MomentV[2]
-                                      + b[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
-                                      );
-    Flux_2[2] = timeCoefficients[1] * ( a[0] * MomentU[2] * MomentV[1]
-                                      + a[1] * MomentU[3] * MomentV[1]
-                                      + a[2] * MomentU[2] * MomentV[2]
-                                      + a[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
-                                      + b[0] * MomentU[1] * MomentV[2]
-                                      + b[1] * MomentU[2] * MomentV[2]
-                                      + b[2] * MomentU[1] * MomentV[3]
-                                      + b[3] * 0.5 * ( MomentU[3]*MomentV[2] + MomentU[1]*MomentV[4] + MomentU[1]*MomentV[2]*MomentXi[2] )
-                                      );
-    Flux_2[3] = timeCoefficients[1] * 0.5 * ( a[0] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                                            + a[1] * ( MomentU[5] * MomentV[0] + MomentU[3] * MomentV[2] + MomentU[3] * MomentV[0] * MomentXi[2] )
-                                            + a[2] * ( MomentU[4] * MomentV[1] + MomentU[2] * MomentV[3] + MomentU[2] * MomentV[1] * MomentXi[2] )
-                                            + a[3] * ( 0.5 * ( MomentU[6] * MomentV[0] + MomentU[2] * MomentV[4] + MomentU[2] * MomentV[0] * MomentXi[4] )
-                                                     +       ( MomentU[4] * MomentV[2] + MomentU[4] * MomentV[0] * MomentXi[2] + MomentU[2] * MomentV[2] * MomentXi[2] ) )
-                                            + b[0] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                                            + b[1] * ( MomentU[4] * MomentV[1] + MomentU[2] * MomentV[3] + MomentU[2] * MomentV[1] * MomentXi[2] )
-                                            + b[2] * ( MomentU[3] * MomentV[2] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[2] * MomentXi[2] )
-                                            + b[3] * ( 0.5 * ( MomentU[5] * MomentV[1] + MomentU[1] * MomentV[5] + MomentU[1] * MomentV[1] * MomentXi[4] )
-                                                     +       ( MomentU[3] * MomentV[3] + MomentU[3] * MomentV[1] * MomentXi[2] + MomentU[1] * MomentV[3] * MomentXi[2] ) )
-                                            );
+    Flux_2[0] = ( a[0] * MomentU[2] 
+                + a[1] * MomentU[3]
+                + a[2] * MomentU[2] * MomentV[1]
+                + a[3] * 0.5 * ( MomentU[4] + MomentU[2]*MomentV[2] + MomentU[2]*MomentXi[2] )
+                + b[0] * MomentU[1] * MomentV[1]
+                + b[1] * MomentU[2] * MomentV[1]
+                + b[2] * MomentU[1] * MomentV[2]
+                + b[3] * 0.5 * ( MomentU[3]*MomentV[1] + MomentU[1]*MomentV[3] + MomentU[1]*MomentV[1]*MomentXi[2] )
+                );
+    Flux_2[1] = ( a[0] * MomentU[3] 
+                + a[1] * MomentU[4]
+                + a[2] * MomentU[3] * MomentV[1]
+                + a[3] * 0.5 * ( MomentU[5] + MomentU[3]*MomentV[2] + MomentU[3]*MomentXi[2] )
+                + b[0] * MomentU[2] * MomentV[1]
+                + b[1] * MomentU[3] * MomentV[1]
+                + b[2] * MomentU[2] * MomentV[2]
+                + b[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
+                );
+    Flux_2[2] = ( a[0] * MomentU[2] * MomentV[1]
+                + a[1] * MomentU[3] * MomentV[1]
+                + a[2] * MomentU[2] * MomentV[2]
+                + a[3] * 0.5 * ( MomentU[4]*MomentV[1] + MomentU[2]*MomentV[3] + MomentU[2]*MomentV[1]*MomentXi[2] )
+                + b[0] * MomentU[1] * MomentV[2]
+                + b[1] * MomentU[2] * MomentV[2]
+                + b[2] * MomentU[1] * MomentV[3]
+                + b[3] * 0.5 * ( MomentU[3]*MomentV[2] + MomentU[1]*MomentV[4] + MomentU[1]*MomentV[2]*MomentXi[2] )
+                );
+    Flux_2[3] = 0.5 * ( a[0] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
+                      + a[1] * ( MomentU[5] * MomentV[0] + MomentU[3] * MomentV[2] + MomentU[3] * MomentV[0] * MomentXi[2] )
+                      + a[2] * ( MomentU[4] * MomentV[1] + MomentU[2] * MomentV[3] + MomentU[2] * MomentV[1] * MomentXi[2] )
+                      + a[3] * ( 0.5 * ( MomentU[6] * MomentV[0] + MomentU[2] * MomentV[4] + MomentU[2] * MomentV[0] * MomentXi[4] )
+                               +       ( MomentU[4] * MomentV[2] + MomentU[4] * MomentV[0] * MomentXi[2] + MomentU[2] * MomentV[2] * MomentXi[2] ) )
+                      + b[0] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                      + b[1] * ( MomentU[4] * MomentV[1] + MomentU[2] * MomentV[3] + MomentU[2] * MomentV[1] * MomentXi[2] )
+                      + b[2] * ( MomentU[3] * MomentV[2] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[2] * MomentXi[2] )
+                      + b[3] * ( 0.5 * ( MomentU[5] * MomentV[1] + MomentU[1] * MomentV[5] + MomentU[1] * MomentV[1] * MomentXi[4] )
+                               +       ( MomentU[3] * MomentV[3] + MomentU[3] * MomentV[1] * MomentXi[2] + MomentU[1] * MomentV[3] * MomentXi[2] ) )
+                      );
 
-    Flux_3[0] = timeCoefficients[2] * ( A[0] * MomentU[1] * MomentV[0]
-                                      + A[1] * MomentU[2] * MomentV[0]
-                                      + A[2] * MomentU[1] * MomentV[1]
-                                      + A[3] * 0.5 * ( MomentU[3]*MomentV[0] + MomentU[1]*MomentV[2] + MomentU[1]*MomentV[0]*MomentXi[2] )
-                                      );
-    Flux_3[1] = timeCoefficients[2] * ( A[0] * MomentU[2] * MomentV[0]
-                                      + A[1] * MomentU[3] * MomentV[0]
-                                      + A[2] * MomentU[2] * MomentV[1]
-                                      + A[3] * 0.5 * ( MomentU[4]*MomentV[0] + MomentU[2]*MomentV[2] + MomentU[2]*MomentV[0]*MomentXi[2] )
-                                      );
-    Flux_3[2] = timeCoefficients[2] * ( A[0] * MomentU[1] * MomentV[1]
-                                      + A[1] * MomentU[2] * MomentV[1]
-                                      + A[2] * MomentU[1] * MomentV[2]
-                                      + A[3] * 0.5 * ( MomentU[3]*MomentV[1] + MomentU[1]*MomentV[3] + MomentU[1]*MomentV[1]*MomentXi[2] )
-                                      );
-    Flux_3[3] = timeCoefficients[2] * 0.5 * ( A[0] * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
-                                            + A[1] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
-                                            + A[2] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
-                                            + A[3] * ( 0.5 * ( MomentU[5] * MomentV[0] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[0] * MomentXi[4] )
-                                                     +       ( MomentU[3] * MomentV[2] + MomentU[3] * MomentXi[2] + MomentU[1] * MomentV[2] * MomentXi[2] ) )
-                                            );
+    Flux_3[0] = ( A[0] * MomentU[1] * MomentV[0]
+                + A[1] * MomentU[2] * MomentV[0]
+                + A[2] * MomentU[1] * MomentV[1]
+                + A[3] * 0.5 * ( MomentU[3]*MomentV[0] + MomentU[1]*MomentV[2] + MomentU[1]*MomentV[0]*MomentXi[2] )
+                );
+    Flux_3[1] = ( A[0] * MomentU[2] * MomentV[0]
+                + A[1] * MomentU[3] * MomentV[0]
+                + A[2] * MomentU[2] * MomentV[1]
+                + A[3] * 0.5 * ( MomentU[4]*MomentV[0] + MomentU[2]*MomentV[2] + MomentU[2]*MomentV[0]*MomentXi[2] )
+                );
+    Flux_3[2] = ( A[0] * MomentU[1] * MomentV[1]
+                + A[1] * MomentU[2] * MomentV[1]
+                + A[2] * MomentU[1] * MomentV[2]
+                + A[3] * 0.5 * ( MomentU[3]*MomentV[1] + MomentU[1]*MomentV[3] + MomentU[1]*MomentV[1]*MomentXi[2] )
+                );
+    Flux_3[3] = 0.5 * ( A[0] * ( MomentU[3] * MomentV[0] + MomentU[1] * MomentV[2] + MomentU[1] * MomentV[0] * MomentXi[2] )
+                      + A[1] * ( MomentU[4] * MomentV[0] + MomentU[2] * MomentV[2] + MomentU[2] * MomentV[0] * MomentXi[2] )
+                      + A[2] * ( MomentU[3] * MomentV[1] + MomentU[1] * MomentV[3] + MomentU[1] * MomentV[1] * MomentXi[2] )
+                      + A[3] * ( 0.5 * ( MomentU[5] * MomentV[0] + MomentU[1] * MomentV[4] + MomentU[1] * MomentV[0] * MomentXi[4] )
+                               +       ( MomentU[3] * MomentV[2] + MomentU[3] * MomentXi[2] + MomentU[1] * MomentV[2] * MomentXi[2] ) )
+                      );
 
     for(int i = 0; i < 4; i++)
-        this->Flux[i] = ( Flux_1[i] + Flux_2[i] + Flux_3[i] ) * dy;
+        this->Flux[i] = ( timeCoefficients[0]*Flux_1[i] + timeCoefficients[1]*Flux_2[i] + timeCoefficients[2]*Flux_3[i] ) * dy;
 }
 
 void Interface::rotate(double * vector)

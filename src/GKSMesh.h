@@ -67,6 +67,8 @@ public:
 
     void writeTimeSteps(string filename);
 
+    void writeVelocityProfile(string filename);
+
 private:
 
     void writeCellGeometry(ofstream& file);

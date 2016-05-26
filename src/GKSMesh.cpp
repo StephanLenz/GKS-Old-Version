@@ -416,6 +416,29 @@ void GKSMesh::writeTimeSteps(string filename)
     file.close();
 }
 
+void GKSMesh::writeVelocityProfile(string filename)
+{
+
+    cout << "Wrinting file " << filename << " ... ";
+    // open file stream
+    ofstream file;
+    file.open(filename.c_str());
+
+    if (!file.is_open()) {
+        cout << " File cound not be opened.\n\nERROR!\n\n\n";
+        return;
+    }
+
+    for (vector<Cell*>::iterator i = this->CellList.begin(); i != this->CellList.end(); ++i)
+    {
+        if (!(*i)->isGhostCell())
+            file << (*i)->getCenter().y << " " << (*i)->getPrim().U << "\n";
+    }
+
+    file.close();
+
+}
+
 void GKSMesh::writeCellGeometry(ofstream& file)
 {
 
