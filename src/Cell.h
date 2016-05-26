@@ -33,11 +33,9 @@ private:
 
 	// Primary Variables
 	double prim[4];
-    double primOld[4];
 
 	// Conseved Variables
-	double cons[3];
-    double consOld[3];
+	double cons[4];
 
     // Boundary Cell
     BoundaryCondition* BoundaryContitionPointer;
@@ -52,8 +50,6 @@ public:
 
 	void update(double dt);
 
-    void storeOldValues();
-
     void applyBoundaryCondition();
 
 	void setValues(double rho, double u, double v, double T);
@@ -67,10 +63,8 @@ public:
 	float2 getCenter();
 
     PrimaryVariable getPrim();
-    PrimaryVariable getPrimOld();
 
     ConservedVariable getCons();
-    ConservedVariable getConsOld();
 
     float2 getDx();
 

@@ -37,8 +37,6 @@ Cell::~Cell()
 
 void Cell::update(double dt)
 {
-    this->storeOldValues();
-
     // negative interfaces = in flux
     // positive interfaces = out flux
     this->cons[0] += ( this->InterfaceList[0]->getFlux().rho
@@ -71,15 +69,6 @@ void Cell::update(double dt)
 
     // compute primary Variables
     this->computePrim();
-}
-
-void Cell::storeOldValues()
-{
-    for (int i = 0; i < 4; i++)
-        primOld[i] = prim[i];
-
-    for (int i = 0; i < 3; i++)
-        consOld[i] = cons[i];
 }
 
 void Cell::applyBoundaryCondition()
@@ -184,16 +173,6 @@ PrimaryVariable Cell::getPrim()
     return tmp;
 }
 
-PrimaryVariable Cell::getPrimOld()
-{
-    PrimaryVariable tmp;
-    tmp.rho = this->primOld[0];
-    tmp.U   = this->primOld[1];
-    tmp.V   = this->primOld[2];
-    tmp.L   = this->primOld[3];
-    return tmp;
-}
-
 ConservedVariable Cell::getCons()
 {
     ConservedVariable tmp;
@@ -201,16 +180,6 @@ ConservedVariable Cell::getCons()
     tmp.rhoU = this->cons[1];
     tmp.rhoV = this->cons[2];
     tmp.rhoE = this->cons[3];
-    return tmp;
-}
-
-ConservedVariable Cell::getConsOld()
-{
-    ConservedVariable tmp;
-    tmp.rho  = this->consOld[0];
-    tmp.rhoU = this->consOld[1];
-    tmp.rhoV = this->consOld[2];
-    tmp.rhoE = this->consOld[3];
     return tmp;
 }
 
