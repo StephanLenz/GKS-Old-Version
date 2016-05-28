@@ -21,6 +21,19 @@ BoundaryCondition::BoundaryCondition( int rhoType, int UType, int VType, int TTy
 }
 
 
+BoundaryCondition::BoundaryCondition(double U, double V)
+{
+    this->type[0] = 0;
+    this->type[1] = 0;
+    this->type[2] = 0;
+    this->type[3] = 0;
+
+    this->value[0] = 0.0;
+    this->value[1] = U;
+    this->value[2] = V;
+    this->value[3] = 0.0;
+}
+
 BoundaryCondition::~BoundaryCondition()
 {
 }

@@ -11,6 +11,8 @@ public:
     BoundaryCondition();
     BoundaryCondition(  int rhoType, int UType, int VType, int TType,
                         double rho, double U, double V, double T);
+
+    BoundaryCondition( double U, double V ); // BC for isothermal wall
     ~BoundaryCondition();
 
     short int getType(short int i);
