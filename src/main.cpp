@@ -178,7 +178,7 @@ int main(int argc, char* argv[])
 
     mesh->iterate();
 
-    // test
+    // test 2
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
     mesh->writeVelocityProfile("out/VelocityProfile.dat");
