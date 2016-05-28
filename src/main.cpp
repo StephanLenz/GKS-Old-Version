@@ -26,7 +26,7 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 0.2;
 
-    param.numberOfIterations = 100000;
+    param.numberOfIterations = 1000000;
     param.outputInterval = 10000;
     param.CFL = 0.5;
 
@@ -36,11 +36,11 @@ int main(int argc, char* argv[])
 
     FluidParameter fluidParam;
 
-    fluidParam.K = 1;
-    fluidParam.nu = 1e-4;
+    fluidParam.K  = 1;
+    fluidParam.nu = 1e-2;
     fluidParam.R = 200.0;
-
-    double TAve = 10.0;
+    fluidParam.Force.x = 1e-4;
+    fluidParam.Force.y = 0.0;
 
     // ========================================================================
 
@@ -48,24 +48,22 @@ int main(int argc, char* argv[])
 
     // Define Boundary Conditions
     //    -----------
-    //    |    3    |
-    //    | 0     2 |
     //    |    1    |
+    //    |         |
+    //    |    0    |
     //    -----------
-    mesh->addBoundaryCondition(1, 1, 1, 1, 10.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 1, 1, 1, 10.0, 0.0, 0.0, 0.0);
-    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.1, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.00, 0.0, 0.0);
+    mesh->addBoundaryCondition(1, 0, 0, 1,  0.0, 0.005, 0.0, 0.0);
 
     // Generate Mesh
-    mesh->generateRectMesh(W, H, 2, 10);
+    mesh->generateRectMeshPeriodic(W, H, 1, 128);
 
     // Initialize Values
-    mesh->initMeshConstant(10.0, 0.0, 0.0, TAve);
+    mesh->initMeshConstant(1.0, 0.0, 0.0, 1.0);
 
     */
 
-   // /*
+    ///*
 
     // ========================================================================
     //
@@ -78,8 +76,8 @@ int main(int argc, char* argv[])
     double H = 1.0;
     double W = 0.2;
 
-    param.numberOfIterations = 100000;
-    param.outputInterval = 100000;
+    param.numberOfIterations = 1000000;
+    param.outputInterval = 10000;
     param.CFL = 0.5;
 
     param.verbose = false;
