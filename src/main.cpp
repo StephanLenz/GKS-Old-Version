@@ -224,6 +224,7 @@ int main(int argc, char* argv[])
 
     //cout << mesh->toString();
 
+    // test
     mesh->iterate();
 
     //mesh->writeTimeSteps("out/timeSteps.dat");
