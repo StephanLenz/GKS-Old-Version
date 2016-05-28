@@ -19,10 +19,12 @@ private:
 
     FluidParameter fluidParam;
 
+    BoundaryCondition* BoundaryConditionPointer;
+
     double Flux[4];
 public:
 	Interface();
-	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam);
+	Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam, BoundaryCondition* BC);
 	~Interface();
 
 	void computeFlux(double dt);
@@ -51,8 +53,6 @@ private:
 
     void computeMicroSlope(double* prim, double* macroSlope, double* microSlope);
     void computeMoments(double* prim, double* MomentU, double* MomentV, double* MomentXi, int numberMoments);
-    void computeMomentUV(double* MomentU, double* MomentV, int alpha, int beta, double* MomentUV);
-    void computeMomentAU(double* a, double* MomentU, double* MomentV, int alpha, int beta, double* MomentAU);
 };
 
 #endif

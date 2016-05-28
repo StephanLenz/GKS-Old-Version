@@ -39,6 +39,8 @@ public:
 
 	void generateRectMesh(double lengthX, double lengthY, int nx, int ny);
 
+    void generateRectMeshPeriodicGhostCells(double lengthX, double lengthY, int nx, int ny);
+
     void generateRectMeshPeriodic(double lengthX, double lengthY, int nx, int ny);
 
 	void initMeshConstant(double rho, double u, double v, double T);
@@ -49,6 +51,8 @@ public:
 
     void addBoundaryCondition(  int rhoType, int UType, int VType, int TType,
                                 double rho, double U, double V, double T);
+
+    void addBoundaryCondition(double U, double V);
 
     void applyBoundaryCondition();
 

@@ -7,7 +7,7 @@ Interface::Interface()
 {
 }
 
-Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam)
+Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, FluidParameter fluidParam, BoundaryCondition* BC)
 {
 	this->negCell = negCell;
 	this->posCell = posCell;
@@ -30,13 +30,15 @@ Interface::Interface(Cell* negCell, Cell* posCell, int axis, float2 normal, Flui
     //    |    1    |
     //    -----------
 
-	this->negCell->addInterface(this,axis+2);
-	this->posCell->addInterface(this,axis+0);
+	if(this->negCell != NULL) this->negCell->addInterface(this,axis+2);
+	if(this->posCell != NULL) this->posCell->addInterface(this,axis+0);
 
     this->normal = normal;
     this->axis = axis;
 
     this->fluidParam = fluidParam;
+
+    this->BoundaryConditionPointer = BC;
 }
 
 Interface::~Interface()
@@ -45,6 +47,8 @@ Interface::~Interface()
 
 void Interface::computeFlux(double dt)
 {
+
+
     const int NUMBER_OF_MOMENTS = 7;
 
     double prim[4];
@@ -59,6 +63,61 @@ void Interface::computeFlux(double dt)
     double MomentU[NUMBER_OF_MOMENTS];
     double MomentV[NUMBER_OF_MOMENTS];
     double MomentXi[NUMBER_OF_MOMENTS];
+
+    // ========================================================================
+    
+    if (this->BoundaryConditionPointer != NULL)
+    {
+        double rhoV;
+        double dx;
+        double dy;
+        double sign;
+
+        if (this->posCell != NULL)
+        {
+            if (this->axis == 0)
+            {
+                rhoV = this->posCell->getCons().rhoV;
+                dx   = this->posCell->getDx().x;
+                dy   = this->posCell->getDx().y;
+            }                
+            else             
+            {                
+                rhoV = this->posCell->getCons().rhoU;
+                dx   = this->posCell->getDx().y;
+                dy   = this->posCell->getDx().x;
+            }
+            sign = -1.0;
+        }
+        else if (this->negCell != NULL)
+        {
+            if (this->axis == 0)
+            {
+                rhoV = this->negCell->getCons().rhoV;
+                dx   = this->negCell->getDx().x;
+                dy   = this->negCell->getDx().y;
+            }
+            else
+            {
+                rhoV = this->negCell->getCons().rhoU;
+                dx   = this->negCell->getDx().y;
+                dy   = this->negCell->getDx().x;
+            }
+            sign = 1.0;
+        }
+
+        this->Flux[0] = 0.0;
+        this->Flux[1] = 0.0;
+        this->Flux[2] = sign * 2.0 * this->fluidParam.nu * rhoV / dx * dt;
+        this->Flux[3] = 0.0;
+
+        if (this->axis == 1)
+            this->rotate(this->Flux);
+
+        return;
+    }
+
+    // ========================================================================
 
     // compute the length of the interface
     double dy = this->posCell->getDx().x * normal.y
@@ -125,6 +184,8 @@ ConservedVariable Interface::getFlux()
 
 bool Interface::isGhostInterface()
 {
+    if (this->negCell == NULL || this->posCell == 0)
+        return false;
     return this->posCell->isGhostCell() && this->negCell->isGhostCell();
 }
 
@@ -132,9 +193,9 @@ string Interface::toString()
 {
 	ostringstream tmp;
 	tmp << "Interface between: \n";
-	tmp << this->negCell->toString();
+	if (this->negCell != NULL) tmp << this->negCell->toString();
 	tmp << "\n";
-	tmp << this->posCell->toString();
+    if (this->posCell != NULL) tmp << this->posCell->toString();
 	tmp << "\n";
     //tmp << this->Flux[0] << " " << this->Flux[1] << " " << this->Flux[2] << " " << this->Flux[3];
     if (this->isGhostInterface())
@@ -234,54 +295,67 @@ void Interface::differentiateCons(double* normalGradCons, double* tangentialGrad
     double dt = this->posCell->getDx().x * normal.y
               + this->posCell->getDx().y * normal.x;
 
-    tangentialGradCons[0] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rho
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rho
-                              + this->posCell->getCons().rho 
-                              + this->negCell->getCons().rho 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rho
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rho 
-                              + this->posCell->getCons().rho 
-                              + this->negCell->getCons().rho
-                              ) * 0.25
-                            ) / dt;
+    // if the cell is located at the boundary, dont use tangential derivatives
+    if (   this->posCell->getNeighborCell(posIdx) == NULL
+        || this->posCell->getNeighborCell(negIdx) == NULL
+        || this->negCell->getNeighborCell(posIdx) == NULL
+        || this->negCell->getNeighborCell(negIdx) == NULL )
+    {
+        tangentialGradCons[0] = 0.0;
+        tangentialGradCons[1] = 0.0;
+        tangentialGradCons[2] = 0.0;
+        tangentialGradCons[3] = 0.0;
+    }
+    else
+    {
+        tangentialGradCons[0] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rho
+                                  + this->negCell->getNeighborCell(posIdx)->getCons().rho
+                                  + this->posCell->getCons().rho 
+                                  + this->negCell->getCons().rho 
+                                  ) * 0.25
+                                - ( this->posCell->getNeighborCell(negIdx)->getCons().rho
+                                  + this->negCell->getNeighborCell(negIdx)->getCons().rho 
+                                  + this->posCell->getCons().rho 
+                                  + this->negCell->getCons().rho
+                                  ) * 0.25
+                                ) / dt;
 
-    tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoU
-                              + this->posCell->getCons().rhoU 
-                              + this->negCell->getCons().rhoU 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoU
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoU 
-                              + this->posCell->getCons().rhoU 
-                              + this->negCell->getCons().rhoU 
-                              ) * 0.25
-                            ) / dt;
+        tangentialGradCons[1] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoU
+                                  + this->negCell->getNeighborCell(posIdx)->getCons().rhoU
+                                  + this->posCell->getCons().rhoU 
+                                  + this->negCell->getCons().rhoU 
+                                  ) * 0.25
+                                - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoU
+                                  + this->negCell->getNeighborCell(negIdx)->getCons().rhoU 
+                                  + this->posCell->getCons().rhoU 
+                                  + this->negCell->getCons().rhoU 
+                                  ) * 0.25
+                                ) / dt;
 
-    tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoV
-                              + this->posCell->getCons().rhoV 
-                              + this->negCell->getCons().rhoV 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoV
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoV 
-                              + this->posCell->getCons().rhoV 
-                              + this->negCell->getCons().rhoV 
-                              ) * 0.25
-                            ) / dt;
+        tangentialGradCons[2] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoV
+                                  + this->negCell->getNeighborCell(posIdx)->getCons().rhoV
+                                  + this->posCell->getCons().rhoV 
+                                  + this->negCell->getCons().rhoV 
+                                  ) * 0.25
+                                - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoV
+                                  + this->negCell->getNeighborCell(negIdx)->getCons().rhoV 
+                                  + this->posCell->getCons().rhoV 
+                                  + this->negCell->getCons().rhoV 
+                                  ) * 0.25
+                                ) / dt;
 
-    tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE
-                              + this->negCell->getNeighborCell(posIdx)->getCons().rhoE
-                              + this->posCell->getCons().rhoE 
-                              + this->negCell->getCons().rhoE 
-                              ) * 0.25
-                            - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE
-                              + this->negCell->getNeighborCell(negIdx)->getCons().rhoE 
-                              + this->posCell->getCons().rhoE 
-                              + this->negCell->getCons().rhoE 
-                              ) * 0.25
-                            ) / dt;
-
+        tangentialGradCons[3] = ( ( this->posCell->getNeighborCell(posIdx)->getCons().rhoE
+                                  + this->negCell->getNeighborCell(posIdx)->getCons().rhoE
+                                  + this->posCell->getCons().rhoE 
+                                  + this->negCell->getCons().rhoE 
+                                  ) * 0.25
+                                - ( this->posCell->getNeighborCell(negIdx)->getCons().rhoE
+                                  + this->negCell->getNeighborCell(negIdx)->getCons().rhoE 
+                                  + this->posCell->getCons().rhoE 
+                                  + this->negCell->getCons().rhoE 
+                                  ) * 0.25
+                                ) / dt;
+        }
 }
 
 void Interface::computeTimeDerivative(double * prim, double * MomentU, double * MomentV, double * MomentXi,
@@ -465,38 +539,5 @@ void Interface::computeMoments(double * prim, double * MomentU, double* MomentV,
     MomentXi[4] = ( 2.0*this->fluidParam.K + 1.0*this->fluidParam.K*this->fluidParam.K ) / (4.0 * prim[3] * prim[3]);
     MomentXi[5] = 0.0;
     MomentXi[6] = 0.0;
-}
-
-void Interface::computeMomentUV(double * MomentU, double * MomentV, int alpha, int beta, double * MomentUV)
-{
-    /*
-    // compute <u^alpha v^beta>         for rho
-    //         <u^alpha+1 v^beta>       for rhoU
-    //         <u^alpha v^beta + 1>     for rhoV
-    MomentUV[0] = MomentU[alpha]   * MomentV[beta];
-    MomentUV[1] = MomentU[alpha+1] * MomentV[beta];
-    MomentUV[2] = MomentU[alpha]   * MomentV[beta+1];
-    MomentUV[3] = MomentU[alpha+2] * MomentV[beta]
-                + MomentU[alpha]   * MomentV[beta+2];
-    */
-}
-
-void Interface::computeMomentAU(double * a, double * MomentU, double * MomentV, int alpha, int beta, double* MomentAU)
-{
-    /*
-    double MomentUV_0[3];
-    double MomentUV_1[3];
-    double MomentUV_2[3];
-
-    this->computeMomentUV(MomentU, MomentV, alpha  , beta  , MomentUV_0);
-    this->computeMomentUV(MomentU, MomentV, alpha+1, beta  , MomentUV_1);
-    this->computeMomentUV(MomentU, MomentV, alpha  , beta+1, MomentUV_2);
-
-    for (int i = 0; i < 3; i++)
-        MomentAU[i] = a[0] * MomentUV_0[i] 
-                    + a[1] * MomentUV_1[i] 
-                    + a[2] * MomentUV_2[i]
-                    + a[3] * ;
-    */
 }
 
